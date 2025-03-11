@@ -21,7 +21,7 @@ const HomeScreen: React.FC = () => {
   const initializeConsent = async () => {
     try {
       await CmSdkReactNativeV3.setUrlConfig({
-        id: '09cb5dca91e6b',
+        id: '719197d2c212c',
         domain: 'delivery.consentmanager.net',
         language: 'EN',
         appName: 'CMDemoAppReactNative',
@@ -35,7 +35,7 @@ const HomeScreen: React.FC = () => {
         allowsOrientationChanges: true,
       });
 
-      await CmSdkReactNativeV3.checkWithServerAndOpenIfNecessary();
+      await CmSdkReactNativeV3.checkAndOpen(false);
       console.log('CMPManager initialized and open consent layer opened if necessary');
     } catch (error) {
       console.error('Error initializing consent:', error);
@@ -64,10 +64,10 @@ const HomeScreen: React.FC = () => {
 
   const buttons = [
     {
-      title: 'Has User Choice?',
+      title: 'Get User Status',
       onPress: () => handleApiCall(
-        CmSdkReactNativeV3.hasUserChoice,
-        (result) => `Has User Choice: ${result}`
+        CmSdkReactNativeV3.getUserStatus,
+        (result) => `User Status: ${JSON.stringify(result).substring(0, 100)}...`
       ),
     },
     {
@@ -78,31 +78,24 @@ const HomeScreen: React.FC = () => {
       ),
     },
     {
-      title: 'Get All Purposes',
+      title: 'Get Status for Purpose c53',
       onPress: () => handleApiCall(
-        CmSdkReactNativeV3.getAllPurposesIDs,
-        (result) => `All Purposes: ${result.join(', ')}`
+        () => CmSdkReactNativeV3.getStatusForPurpose('c53'),
+        (result) => `Purpose Status: ${result}`
       ),
     },
     {
-      title: 'Has Purpose ID c53?',
+      title: 'Get Status for Vendor s2789',
       onPress: () => handleApiCall(
-        () => CmSdkReactNativeV3.hasPurposeConsent('c53'),
-        (result) => `Has Purpose: ${result}`
+        () => CmSdkReactNativeV3.getStatusForVendor('s2789'),
+        (result) => `Vendor Status: ${result}`
       ),
     },
     {
-      title: 'Get Enabled Purposes',
+      title: 'Get Google Consent Mode Status',
       onPress: () => handleApiCall(
-        CmSdkReactNativeV3.getEnabledPurposesIDs,
-        (result) => `Enabled Purposes: ${result.join(', ')}`
-      ),
-    },
-    {
-      title: 'Get Disabled Purposes',
-      onPress: () => handleApiCall(
-        CmSdkReactNativeV3.getDisabledPurposesIDs,
-        (result) => `Disabled Purposes: ${result.join(', ')}`
+        CmSdkReactNativeV3.getGoogleConsentModeStatus,
+        (result) => `Google Consent: ${JSON.stringify(result)}`
       ),
     },
     {
@@ -117,34 +110,6 @@ const HomeScreen: React.FC = () => {
       onPress: () => handleApiCall(
         () => CmSdkReactNativeV3.rejectPurposes(['c52', 'c53'], true),
         () => 'Purposes disabled'
-      ),
-    },
-    {
-      title: 'Get All Vendors',
-      onPress: () => handleApiCall(
-        CmSdkReactNativeV3.getAllVendorsIDs,
-        (result) => `All Vendors: ${result.join(', ')}`
-      ),
-    },
-    {
-      title: 'Has Vendor ID s2789?',
-      onPress: () => handleApiCall(
-        () => CmSdkReactNativeV3.hasVendorConsent('s2789'),
-        (result) => `Has Vendor: ${result}`
-      ),
-    },
-    {
-      title: 'Get Enabled Vendors',
-      onPress: () => handleApiCall(
-        CmSdkReactNativeV3.getEnabledVendorsIDs,
-        (result) => `Enabled Vendors: ${result.join(', ')}`
-      ),
-    },
-    {
-      title: 'Get Disabled Vendors',
-      onPress: () => handleApiCall(
-        CmSdkReactNativeV3.getDisabledVendorsIDs,
-        (result) => `Disabled Vendors: ${result.join(', ')}`
       ),
     },
     {
@@ -178,22 +143,29 @@ const HomeScreen: React.FC = () => {
     {
       title: 'Check and Open Consent Layer',
       onPress: () => handleApiCall(
-        CmSdkReactNativeV3.checkWithServerAndOpenIfNecessary,
-        () => 'Check and Open Consent Layer operation done successfully'
+        () => CmSdkReactNativeV3.checkAndOpen(false),
+        () => 'Check and Open operation completed'
       ),
     },
     {
-      title: 'Check Consent Required',
+      title: 'Check and Open Settings Page',
       onPress: () => handleApiCall(
-        CmSdkReactNativeV3.checkIfConsentIsRequired,
-        (result) => `Needs Consent: ${result}`
+        () => CmSdkReactNativeV3.checkAndOpen(true),
+        () => 'Settings page opened if needed'
       ),
     },
     {
-      title: 'Open Consent Layer',
+      title: 'Force Open Consent Layer',
       onPress: () => handleApiCall(
-        CmSdkReactNativeV3.openConsentLayer,
-        () => 'Consent Layer opened successfully'
+        () => CmSdkReactNativeV3.forceOpen(false),
+        () => 'Consent Layer opened'
+      ),
+    },
+    {
+      title: 'Force Open Settings Page',
+      onPress: () => handleApiCall(
+        () => CmSdkReactNativeV3.forceOpen(true),
+        () => 'Settings page opened'
       ),
     },
     {
@@ -234,6 +206,7 @@ const HomeScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>CM React Native DemoApp</Text>
+        <Text style={styles.subtitle}>Using New API</Text>
         {buttons.map((button, index) => (
           <TouchableOpacity
             key={index}
@@ -269,8 +242,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
     marginBottom: 20,
     textAlign: 'center',
+    color: '#555',
   },
   button: {
     backgroundColor: 'blue',
