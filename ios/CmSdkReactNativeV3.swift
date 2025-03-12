@@ -253,45 +253,41 @@ class CmSdkReactNativeV3: NSObject {
 
   @objc(rejectAll:withRejecter:)
   func rejectAll(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      self.cmpManager.rejectAll { success in
-          resolve(success)
-      }
+    self.cmpManager.rejectAll { error in
+       if let error = error {
+           reject("ERROR", "Failed to reject all: \(error.localizedDescription)", error)
+       } else {
+           resolve(true)
+       }
+     }
   }
 
   @objc(acceptAll:withRejecter:)
   func acceptAll(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      self.cmpManager.acceptAll { success in
-          resolve(success)
+    self.cmpManager.acceptAll { error in
+      if let error = error {
+         reject("ERROR", "Failed to accept all: \(error.localizedDescription)", error)
+      } else {
+         resolve(true)
       }
+    }
   }
 
   @objc(importCMPInfo:withResolver:withRejecter:)
   func importCMPInfo(_ cmpString: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      self.cmpManager.importCMPInfo(cmpString, completion: { success in resolve(success)})
-          resolve(true)
+      self.cmpManager.importCMPInfo(cmpString) { error in
+         if let error = error {
+             reject("ERROR", "Failed to import CMP info: \(error.localizedDescription)", error)
+         } else {
+             resolve(true)
+         }
+     }
   }
 
   @objc(resetConsentManagementData:withRejecter:)
   func resetConsentManagementData(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       self.cmpManager.resetConsentManagementData(completion: { success in resolve(success)})
       resolve(nil)
-  }
-
-  @objc(requestATTAuthorization:withRejecter:)
-  func requestATTAuthorization(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      DispatchQueue.main.async { [weak self] in
-          guard let self = self else {
-              reject("ERROR", "Bridge object deallocated", nil)
-              return
-          }
-          if #available(iOS 14, *) {
-              self.cmpManager.requestATTAuthorization { status in
-                  resolve(status.rawValue)
-              }
-          } else {
-              reject("ERROR", "ATT is only available on iOS 14 and later", nil)
-          }
-      }
   }
 
   @objc(getATTAuthorizationStatus:withRejecter:)

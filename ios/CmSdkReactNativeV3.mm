@@ -114,9 +114,6 @@ RCT_EXTERN_METHOD(resetConsentManagementData:(RCTPromiseResolveBlock)resolve
         withRejecter:(RCTPromiseRejectBlock)reject)
 
 // ATT methods
-RCT_EXTERN_METHOD(requestATTAuthorization:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
-
 RCT_EXTERN_METHOD(getATTAuthorizationStatus:(RCTPromiseResolveBlock)resolve
         withRejecter:(RCTPromiseRejectBlock)reject)
 
