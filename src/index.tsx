@@ -17,36 +17,47 @@ const CmSdkReactNativeV3 = NativeModules.CmSdkReactNativeV3
       }
     );
 
+// Core configuration methods
 export const setUrlConfig = CmSdkReactNativeV3.setUrlConfig;
 export const setWebViewConfig = CmSdkReactNativeV3.setWebViewConfig;
-export const checkWithServerAndOpenIfNecessary =
-  CmSdkReactNativeV3.checkWithServerAndOpenIfNecessary;
-export const openConsentLayer = CmSdkReactNativeV3.openConsentLayer;
+
+// Main interaction methods (new API)
+export const checkAndOpen = CmSdkReactNativeV3.checkAndOpen;
+export const forceOpen = CmSdkReactNativeV3.forceOpen;
 export const jumpToSettings = CmSdkReactNativeV3.jumpToSettings;
-export const checkIfConsentIsRequired =
-  CmSdkReactNativeV3.checkIfConsentIsRequired;
-export const hasUserChoice = CmSdkReactNativeV3.hasUserChoice;
-export const hasPurposeConsent = CmSdkReactNativeV3.hasPurposeConsent;
-export const hasVendorConsent = CmSdkReactNativeV3.hasVendorConsent;
+
+// Consent status methods
+export const getUserStatus = CmSdkReactNativeV3.getUserStatus;
+export const getStatusForPurpose = CmSdkReactNativeV3.getStatusForPurpose;
+export const getStatusForVendor = CmSdkReactNativeV3.getStatusForVendor;
+export const getGoogleConsentModeStatus = CmSdkReactNativeV3.getGoogleConsentModeStatus;
 export const exportCMPInfo = CmSdkReactNativeV3.exportCMPInfo;
-export const getAllPurposesIDs = CmSdkReactNativeV3.getAllPurposesIDs;
-export const getEnabledPurposesIDs = CmSdkReactNativeV3.getEnabledPurposesIDs;
-export const getDisabledPurposesIDs = CmSdkReactNativeV3.getDisabledPurposesIDs;
-export const getAllVendorsIDs = CmSdkReactNativeV3.getAllVendorsIDs;
-export const getEnabledVendorsIDs = CmSdkReactNativeV3.getEnabledVendorsIDs;
-export const getDisabledVendorsIDs = CmSdkReactNativeV3.getDisabledVendorsIDs;
+export const importCMPInfo = CmSdkReactNativeV3.importCMPInfo;
+export const resetConsentManagementData = CmSdkReactNativeV3.resetConsentManagementData;
+
+// iOS App Tracking Transparency
+export const getATTAuthorizationStatus = CmSdkReactNativeV3.getATTAuthorizationStatus;
+
+// Consent modification methods
 export const acceptVendors = CmSdkReactNativeV3.acceptVendors;
 export const rejectVendors = CmSdkReactNativeV3.rejectVendors;
 export const acceptPurposes = CmSdkReactNativeV3.acceptPurposes;
 export const rejectPurposes = CmSdkReactNativeV3.rejectPurposes;
 export const rejectAll = CmSdkReactNativeV3.rejectAll;
 export const acceptAll = CmSdkReactNativeV3.acceptAll;
-export const importCMPInfo = CmSdkReactNativeV3.importCMPInfo;
-export const resetConsentManagementData =
-  CmSdkReactNativeV3.resetConsentManagementData;
-export const requestATTAuthorization =
-  CmSdkReactNativeV3.requestATTAuthorization;
-export const getATTAuthorizationStatus =
-  CmSdkReactNativeV3.getATTAuthorizationStatus;
+
+// Deprecated methods (kept for backward compatibility)
+export const checkWithServerAndOpenIfNecessary = CmSdkReactNativeV3.checkWithServerAndOpenIfNecessary;
+export const openConsentLayer = CmSdkReactNativeV3.openConsentLayer;
+export const checkIfConsentIsRequired = CmSdkReactNativeV3.checkIfConsentIsRequired;
+export const hasUserChoice = CmSdkReactNativeV3.hasUserChoice;
+export const hasPurposeConsent = CmSdkReactNativeV3.hasPurposeConsent;
+export const hasVendorConsent = CmSdkReactNativeV3.hasVendorConsent;
+export const getAllPurposesIDs = CmSdkReactNativeV3.getAllPurposesIDs;
+export const getEnabledPurposesIDs = CmSdkReactNativeV3.getEnabledPurposesIDs;
+export const getDisabledPurposesIDs = CmSdkReactNativeV3.getDisabledPurposesIDs;
+export const getAllVendorsIDs = CmSdkReactNativeV3.getAllVendorsIDs;
+export const getEnabledVendorsIDs = CmSdkReactNativeV3.getEnabledVendorsIDs;
+export const getDisabledVendorsIDs = CmSdkReactNativeV3.getDisabledVendorsIDs;
 
 export default CmSdkReactNativeV3;

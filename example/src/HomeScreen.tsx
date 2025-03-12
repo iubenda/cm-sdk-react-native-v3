@@ -66,8 +66,12 @@ const HomeScreen: React.FC = () => {
     {
       title: 'Get User Status',
       onPress: () => handleApiCall(
-        CmSdkReactNativeV3.getUserStatus,
-        (result) => `User Status: ${JSON.stringify(result).substring(0, 100)}...`
+        async () => {
+          const result = await CmSdkReactNativeV3.getUserStatus();
+          console.log('User Status Full Response:', JSON.stringify(result, null, 2));
+          return result;
+        },
+        () => 'Check logs for User Status'
       ),
     },
     {
@@ -182,13 +186,6 @@ const HomeScreen: React.FC = () => {
       onPress: () => handleApiCall(
         CmSdkReactNativeV3.resetConsentManagementData,
         () => 'All consents reset'
-      ),
-    },
-    {
-      title: 'Request ATT Authorization',
-      onPress: () => handleApiCall(
-        CmSdkReactNativeV3.requestATTAuthorization,
-        (status) => `ATT Status: ${status}`
       ),
     },
   ];
