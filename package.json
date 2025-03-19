@@ -1,6 +1,6 @@
 {
-  "name": "react-native-cm-sdk-react-native-v3",
-  "version": "3.0.0",
+  "name": "cm-sdk-react-native-v3",
+  "version": "3.2.0",
   "description": "Consent Management React Native Library by consentmanager.net",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
@@ -52,7 +52,7 @@
     "type": "git",
     "url": "git+https://github.com/iubenda/cm-sdk-react-native-v3.git"
   },
-  "author": "Fabio Torre <fabiotorre@gmail.com> (https://github.com/fabiotorre)",
+  "author": "Fabio Torre <fabio.torre@iubenda.com> (https://github.com/fabiotorre)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/iubenda/cm-sdk-react-native-v3/issues"
