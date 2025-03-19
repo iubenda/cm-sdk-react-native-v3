@@ -1,31 +1,10 @@
-# react-native-cm-sdk-react-native-v3
+# ``consentmanager CMP SDK v3.2.0``
 
-Consent Management React Native Library by consentmanager.net
+# cm-sdk-react-native-v3
 
-## Installation
+cm-sdk-react-native-v3 is a comprehensive Consent Management Platform (CMP) SDK bridge for React Native developed applications. It provides easy-to-use APIs for handling user consent in compliance with various privacy regulations.
 
-```sh
-npm install react-native-cm-sdk-react-native-v3
-```
-
-## Usage
-
-```js
-import { multiply } from 'react-native-cm-sdk-react-native-v3';
-
-// ...
-
-const result = await multiply(3, 7);
-```
-
-## Contributing
-
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
-
+For further information, please refer to [our documentation](https://help.consentmanager.net/books/cmp/page/integrating-the-sdk-v3-into-your-mobile-app)
 ## License
 
-MIT
-
----
-
-Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)
+CMPManager is available under the MIT license. See the LICENSE file for more info.

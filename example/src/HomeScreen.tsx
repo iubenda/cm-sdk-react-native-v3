@@ -21,7 +21,7 @@ const HomeScreen: React.FC = () => {
   const initializeConsent = async () => {
     try {
       await CmSdkReactNativeV3.setUrlConfig({
-        id: '719197d2c212c',
+        id: '26cba6cf81e76',
         domain: 'delivery.consentmanager.net',
         language: 'EN',
         appName: 'CMDemoAppReactNative',
