@@ -117,4 +117,9 @@ RCT_EXTERN_METHOD(resetConsentManagementData:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(getATTAuthorizationStatus:(RCTPromiseResolveBlock)resolve
         withRejecter:(RCTPromiseRejectBlock)reject)
 
++ (BOOL)requiresMainQueueSetup
+{
+    return YES;
+}
+
 @end
