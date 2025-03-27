@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import CmSdkReactNativeV3 from 'react-native-cm-sdk-react-native-v3';
+import CmSdkReactNativeV3 from 'cm-sdk-react-native-v3';
 
 const HomeScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);

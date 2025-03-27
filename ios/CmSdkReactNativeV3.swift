@@ -299,4 +299,9 @@ class CmSdkReactNativeV3: NSObject {
           reject("ERROR", "ATT is only available on iOS 14 and later", nil)
       }
   }
+
+  @objc
+  static func requiresMainQueueSetup() -> Bool {
+    return true
+  }
 }
