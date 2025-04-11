@@ -290,16 +290,6 @@ class CmSdkReactNativeV3: NSObject {
       resolve(nil)
   }
 
-  @objc(getATTAuthorizationStatus:withRejecter:)
-  func getATTAuthorizationStatus(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      if #available(iOS 14, *) {
-          let status = self.cmpManager.getATTAuthorizationStatus()
-          resolve(status.rawValue)
-      } else {
-          reject("ERROR", "ATT is only available on iOS 14 and later", nil)
-      }
-  }
-
   @objc
   static func requiresMainQueueSetup() -> Bool {
     return true

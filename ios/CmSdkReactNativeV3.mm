@@ -113,10 +113,6 @@ RCT_EXTERN_METHOD(importCMPInfo:(NSString *)cmpString
 RCT_EXTERN_METHOD(resetConsentManagementData:(RCTPromiseResolveBlock)resolve
         withRejecter:(RCTPromiseRejectBlock)reject)
 
-// ATT methods
-RCT_EXTERN_METHOD(getATTAuthorizationStatus:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
-
 + (BOOL)requiresMainQueueSetup
 {
     return YES;
