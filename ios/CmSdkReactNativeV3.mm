@@ -1,6 +1,10 @@
 #import <React/RCTBridgeModule.h>
+#import <React/RCTEventEmitter.h>
 
-@interface RCT_EXTERN_MODULE(CmSdkReactNativeV3, NSObject)
+@interface RCT_EXTERN_MODULE(CmSdkReactNativeV3, RCTEventEmitter)
+
+// Event emitter methods
+RCT_EXTERN_METHOD(supportedEvents)
 
 // Core methods
 RCT_EXTERN_METHOD(setUrlConfig:(NSDictionary *)config

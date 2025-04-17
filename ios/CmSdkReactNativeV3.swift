@@ -1,14 +1,51 @@
 import Foundation
 import cm_sdk_ios_v3
+import React
 
 @objc(CmSdkReactNativeV3)
-class CmSdkReactNativeV3: NSObject {
+class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
+  func didChangeATTStatus(oldStatus: Int, newStatus: Int, lastUpdated: Date?) {
+    sendEventIfListening(name: "didChangeATTStatus", body: [
+      "oldStatus": oldStatus,
+      "newStatus": newStatus,
+      "lastUpdated": lastUpdated?.timeIntervalSince1970 ?? 0
+    ])
+  }
 
   private let cmpManager: CMPManager
+  private var hasListeners: Bool = false
 
   override init() {
     self.cmpManager = CMPManager.shared
     super.init()
+    // Set ourselves as the delegate to receive events
+    self.cmpManager.delegate = self
+  }
+
+  // Required override for RCTEventEmitter
+  override static func requiresMainQueueSetup() -> Bool {
+    return true
+  }
+
+  // Define the events that this module can emit
+  override func supportedEvents() -> [String]! {
+    return ["didReceiveConsent", "didShowConsentLayer", "didCloseConsentLayer", "didReceiveError"]
+  }
+
+  // Track when listeners are added or removed
+  override func startObserving() {
+    hasListeners = true
+  }
+
+  override func stopObserving() {
+    hasListeners = false
+  }
+
+  // Helper method to check if we have listeners before sending events
+  private func sendEventIfListening(name: String, body: [String: Any]?) {
+    if hasListeners {
+      self.sendEvent(withName: name, body: body)
+    }
   }
 
   private func runOnMainThread(_ block: @escaping () -> Void) {
@@ -18,6 +55,30 @@ class CmSdkReactNativeV3: NSObject {
         DispatchQueue.main.sync(execute: block)
     }
   }
+
+  // MARK: - CMPManagerDelegate methods
+
+  @objc public func didReceiveConsent(consent: String, jsonObject: [String: Any]) {
+    // Forward the consent event to React Native
+    sendEventIfListening(name: "didReceiveConsent", body: [
+      "consent": consent,
+      "jsonObject": jsonObject
+    ])
+  }
+
+  @objc public func didShowConsentLayer() {
+    sendEventIfListening(name: "didShowConsentLayer", body: nil)
+  }
+
+  @objc public func didCloseConsentLayer() {
+    sendEventIfListening(name: "didCloseConsentLayer", body: nil)
+  }
+
+  @objc public func didReceiveError(error: String) {
+    sendEventIfListening(name: "didReceiveError", body: ["error": error])
+  }
+
+  // MARK: - Configuration methods
 
   @objc(setWebViewConfig:withResolver:withRejecter:)
   func setWebViewConfig(_ config: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
@@ -288,10 +349,5 @@ class CmSdkReactNativeV3: NSObject {
   func resetConsentManagementData(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       self.cmpManager.resetConsentManagementData(completion: { success in resolve(success)})
       resolve(nil)
-  }
-
-  @objc
-  static func requiresMainQueueSetup() -> Bool {
-    return true
   }
 }
