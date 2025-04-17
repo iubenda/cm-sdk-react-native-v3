@@ -1,4 +1,4 @@
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules, Platform, NativeEventEmitter, DeviceEventEmitter } from 'react-native';
 
 const LINKING_ERROR =
   `The package 'react-native-cm-sdk-react-native-v3' doesn't seem to be linked. Make sure: \n\n` +
@@ -16,6 +16,31 @@ const CmSdkReactNativeV3 = NativeModules.CmSdkReactNativeV3
         },
       }
     );
+
+const isIOS = Platform.OS === 'ios';
+const eventEmitter = isIOS ? new NativeEventEmitter(CmSdkReactNativeV3) : DeviceEventEmitter;
+
+export const addConsentListener = (
+  callback: (consent: string, jsonObject: any) => void
+) => {
+  return eventEmitter.addListener('didReceiveConsent', (event) => {
+    callback(event.consent, event.jsonObject);
+  });
+};
+
+export const addShowConsentLayerListener = (callback: () => void) => {
+  return eventEmitter.addListener('didShowConsentLayer', callback);
+};
+
+export const addCloseConsentLayerListener = (callback: () => void) => {
+  return eventEmitter.addListener('didCloseConsentLayer', callback);
+};
+
+export const addErrorListener = (callback: (error: string) => void) => {
+  return eventEmitter.addListener('didReceiveError', (event) => {
+    callback(event.error);
+  });
+};
 
 // Core configuration methods
 export const setUrlConfig = CmSdkReactNativeV3.setUrlConfig;

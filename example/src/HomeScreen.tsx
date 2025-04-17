@@ -7,12 +7,70 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  EmitterSubscription,
 } from 'react-native';
-import CmSdkReactNativeV3 from 'cm-sdk-react-native-v3';
+import CmSdkReactNativeV3, {
+  addConsentListener,
+  addShowConsentLayerListener,
+  addCloseConsentLayerListener,
+  addErrorListener,
+} from 'cm-sdk-react-native-v3';
 
 const HomeScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [eventLog, setEventLog] = useState<string[]>([]);
+
+  // Set up event listeners
+  useEffect(() => {
+    // Store the event subscriptions so we can clean up later
+    const subscriptions: EmitterSubscription[] = [];
+
+    // Set up consent event listener
+    subscriptions.push(
+      addConsentListener((consent, jsonObject) => {
+        const message = `Consent received: ${consent.substring(0, 20)}...`;
+        console.log(message, jsonObject);
+        setEventLog(prev => [...prev, message]);
+        showToast(message);
+      })
+    );
+
+    // Set up show consent layer listener
+    subscriptions.push(
+      addShowConsentLayerListener(() => {
+        const message = 'Consent layer shown';
+        console.log(message);
+        setEventLog(prev => [...prev, message]);
+        showToast(message);
+      })
+    );
+
+    // Set up close consent layer listener
+    subscriptions.push(
+      addCloseConsentLayerListener(() => {
+        const message = 'Consent layer closed';
+        console.log(message);
+        setEventLog(prev => [...prev, message]);
+        showToast(message);
+      })
+    );
+
+    // Set up error listener
+    subscriptions.push(
+      addErrorListener((error) => {
+        const message = `Error: ${error}`;
+        console.error(message);
+        setEventLog(prev => [...prev, message]);
+        showToast(message);
+      })
+    );
+
+    // Clean up listeners when component unmounts
+    return () => {
+      subscriptions.forEach(subscription => subscription.remove());
+    };
+  }, []);
 
   useEffect(() => {
     initializeConsent();
@@ -66,12 +124,8 @@ const HomeScreen: React.FC = () => {
     {
       title: 'Get User Status',
       onPress: () => handleApiCall(
-        async () => {
-          const result = await CmSdkReactNativeV3.getUserStatus();
-          console.log('User Status Full Response:', JSON.stringify(result, null, 2));
-          return result;
-        },
-        () => 'Check logs for User Status'
+        CmSdkReactNativeV3.getUserStatus,
+        (result) => `User Status: ${JSON.stringify(result).substring(0, 100)}...`
       ),
     },
     {
@@ -204,6 +258,23 @@ const HomeScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>CM React Native DemoApp</Text>
         <Text style={styles.subtitle}>Using New API</Text>
+
+        {/* Event Logger Section */}
+        <View style={styles.eventLogContainer}>
+          <Text style={styles.eventLogTitle}>Event Log:</Text>
+          <ScrollView style={styles.eventLogScrollView}>
+            {eventLog.length === 0 ? (
+              <Text style={styles.noEventsText}>No events received yet</Text>
+            ) : (
+              eventLog.map((event, index) => (
+                <Text key={index} style={styles.eventText}>
+                  {event}
+                </Text>
+              ))
+            )}
+          </ScrollView>
+        </View>
+
         {buttons.map((button, index) => (
           <TouchableOpacity
             key={index}
@@ -247,6 +318,30 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
     color: '#555',
+  },
+  eventLogContainer: {
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+  },
+  eventLogTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  eventLogScrollView: {
+    maxHeight: 150,
+  },
+  noEventsText: {
+    fontStyle: 'italic',
+    color: '#888',
+  },
+  eventText: {
+    marginBottom: 3,
+    fontSize: 12,
   },
   button: {
     backgroundColor: 'blue',
