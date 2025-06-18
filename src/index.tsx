@@ -60,9 +60,6 @@ export const exportCMPInfo = CmSdkReactNativeV3.exportCMPInfo;
 export const importCMPInfo = CmSdkReactNativeV3.importCMPInfo;
 export const resetConsentManagementData = CmSdkReactNativeV3.resetConsentManagementData;
 
-// iOS App Tracking Transparency
-export const getATTAuthorizationStatus = CmSdkReactNativeV3.getATTAuthorizationStatus;
-
 // Consent modification methods
 export const acceptVendors = CmSdkReactNativeV3.acceptVendors;
 export const rejectVendors = CmSdkReactNativeV3.rejectVendors;

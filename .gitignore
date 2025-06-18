@@ -80,3 +80,8 @@ lib/
 # React Native Codegen
 ios/generated
 android/generated
+/example/.watchman-cookie-Fabios-MacBook-Pro.local-29252-2993
+/cm-sdk-react-native-v3-3.2.0.tgz
+/package-lock.json
+/example/ios/Podfile.lock
+/yarn.lock

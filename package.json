@@ -1,6 +1,6 @@
 {
   "name": "cm-sdk-react-native-v3",
-  "version": "3.2.4",
+  "version": "3.3.0",
   "description": "Consent Management React Native Library by consentmanager.net",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
