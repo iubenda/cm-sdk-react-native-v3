@@ -43,43 +43,175 @@ export const addErrorListener = (callback: (error: string) => void) => {
 };
 
 // Core configuration methods
-export const setUrlConfig = CmSdkReactNativeV3.setUrlConfig;
-export const setWebViewConfig = CmSdkReactNativeV3.setWebViewConfig;
+export interface UrlConfig {
+  id: string;
+  domain: string;
+  language: string;
+  appName: string;
+}
+
+export const setUrlConfig = (config: UrlConfig): Promise<void> => {
+  return CmSdkReactNativeV3.setUrlConfig(config);
+};
+
+export interface WebViewConfig {
+  position?: 'fullScreen' | 'halfScreenBottom' | 'halfScreenTop';
+  cornerRadius?: number;
+  respectsSafeArea?: boolean;
+  allowsOrientationChanges?: boolean;
+}
+
+export const setWebViewConfig: (config: WebViewConfig) => Promise<void> = (
+  config
+) => {
+  return CmSdkReactNativeV3.setWebViewConfig(config);
+};
 
 // Main interaction methods (new API)
-export const checkAndOpen = CmSdkReactNativeV3.checkAndOpen;
-export const forceOpen = CmSdkReactNativeV3.forceOpen;
-export const jumpToSettings = CmSdkReactNativeV3.jumpToSettings;
+export const checkAndOpen = (jumpToSettings: boolean): Promise<boolean> => {
+  return CmSdkReactNativeV3.checkAndOpen(jumpToSettings);
+};
+
+export const forceOpen = (jumpToSettings: boolean): Promise<boolean> => {
+  return CmSdkReactNativeV3.forceOpen(jumpToSettings);
+};
+
+export const jumpToSettings = (): Promise<boolean> => {
+  return CmSdkReactNativeV3.jumpToSettings();
+};
 
 // Consent status methods
-export const getUserStatus = CmSdkReactNativeV3.getUserStatus;
-export const getStatusForPurpose = CmSdkReactNativeV3.getStatusForPurpose;
-export const getStatusForVendor = CmSdkReactNativeV3.getStatusForVendor;
-export const getGoogleConsentModeStatus = CmSdkReactNativeV3.getGoogleConsentModeStatus;
-export const exportCMPInfo = CmSdkReactNativeV3.exportCMPInfo;
-export const importCMPInfo = CmSdkReactNativeV3.importCMPInfo;
-export const resetConsentManagementData = CmSdkReactNativeV3.resetConsentManagementData;
+export interface UserStatus {
+  hasUserChoice: string;
+  tcf: string;
+  addtlConsent: string;
+  regulation: string;
+  vendors: Record<string, string>;
+  purposes: Record<string, string>;
+}
+
+export const getUserStatus = (): Promise<UserStatus> => {
+  return CmSdkReactNativeV3.getUserStatus();
+};
+
+export const getStatusForPurpose = (purposeId: string): Promise<string> => {
+  return CmSdkReactNativeV3.getStatusForPurpose(purposeId);
+};
+
+export const getStatusForVendor = (vendorId: string): Promise<string> => {
+  return CmSdkReactNativeV3.getStatusForVendor(vendorId);
+};
+
+export enum ConsentType {
+  ANALYTICS_STORAGE = 'analytics_storage',
+  AD_STORAGE = 'ad_storage',
+  AD_USER_DATA = 'ad_user_data',
+  AD_PERSONALIZATION = 'ad_personalization',
+}
+
+export enum ConsentModeStatus {
+  GRANTED = 'granted',
+  DENIED = 'denied',
+}
+
+export const getGoogleConsentModeStatus = (): Promise<
+  Record<ConsentType, ConsentModeStatus>
+> => {
+  return CmSdkReactNativeV3.getGoogleConsentModeStatus();
+};
+
+export const exportCMPInfo = (): Promise<string> => {
+  return CmSdkReactNativeV3.exportCMPInfo();
+};
+
+export const importCMPInfo = (cmpString: string): Promise<boolean> => {
+  return CmSdkReactNativeV3.importCMPInfo(cmpString);
+};
+
+export const resetConsentManagementData = (): Promise<boolean> => {
+  return CmSdkReactNativeV3.resetConsentManagementData();
+};
 
 // Consent modification methods
-export const acceptVendors = CmSdkReactNativeV3.acceptVendors;
-export const rejectVendors = CmSdkReactNativeV3.rejectVendors;
-export const acceptPurposes = CmSdkReactNativeV3.acceptPurposes;
-export const rejectPurposes = CmSdkReactNativeV3.rejectPurposes;
-export const rejectAll = CmSdkReactNativeV3.rejectAll;
-export const acceptAll = CmSdkReactNativeV3.acceptAll;
+export const acceptVendors = (vendors: string[]): Promise<void> => {
+  return CmSdkReactNativeV3.acceptVendors(vendors);
+};
+
+export const rejectVendors = (vendors: string[]): Promise<void> => {
+  return CmSdkReactNativeV3.rejectVendors(vendors);
+};
+
+export const acceptPurposes = (
+  purposes: string[],
+  updatePurpose: boolean
+): Promise<void> => {
+  return CmSdkReactNativeV3.acceptPurposes(purposes, updatePurpose);
+};
+
+export const rejectPurposes = (
+  purposes: string[],
+  updateVendor: boolean
+): Promise<void> => {
+  return CmSdkReactNativeV3.rejectPurposes(purposes, updateVendor);
+};
+
+export const rejectAll = (): Promise<void> => {
+  return CmSdkReactNativeV3.rejectAll();
+};
+
+export const acceptAll = (): Promise<void> => {
+  return CmSdkReactNativeV3.acceptAll();
+};
 
 // Deprecated methods (kept for backward compatibility)
-export const checkWithServerAndOpenIfNecessary = CmSdkReactNativeV3.checkWithServerAndOpenIfNecessary;
-export const openConsentLayer = CmSdkReactNativeV3.openConsentLayer;
-export const checkIfConsentIsRequired = CmSdkReactNativeV3.checkIfConsentIsRequired;
-export const hasUserChoice = CmSdkReactNativeV3.hasUserChoice;
-export const hasPurposeConsent = CmSdkReactNativeV3.hasPurposeConsent;
-export const hasVendorConsent = CmSdkReactNativeV3.hasVendorConsent;
-export const getAllPurposesIDs = CmSdkReactNativeV3.getAllPurposesIDs;
-export const getEnabledPurposesIDs = CmSdkReactNativeV3.getEnabledPurposesIDs;
-export const getDisabledPurposesIDs = CmSdkReactNativeV3.getDisabledPurposesIDs;
-export const getAllVendorsIDs = CmSdkReactNativeV3.getAllVendorsIDs;
-export const getEnabledVendorsIDs = CmSdkReactNativeV3.getEnabledVendorsIDs;
-export const getDisabledVendorsIDs = CmSdkReactNativeV3.getDisabledVendorsIDs;
+export const checkWithServerAndOpenIfNecessary = (): Promise<boolean> => {
+  return CmSdkReactNativeV3.checkWithServerAndOpenIfNecessary();
+};
+
+export const openConsentLayer = (): Promise<boolean> => {
+  return CmSdkReactNativeV3.openConsentLayer();
+};
+
+export const checkIfConsentIsRequired = (): Promise<boolean> => {
+  return CmSdkReactNativeV3.checkIfConsentIsRequired();
+};
+
+// Status checking methods
+export const hasUserChoice = (): Promise<boolean> => {
+  return CmSdkReactNativeV3.hasUserChoice();
+};
+
+export const hasPurposeConsent = (purposeId: string): Promise<boolean> => {
+  return CmSdkReactNativeV3.hasPurposeConsent(purposeId);
+};
+
+export const hasVendorConsent = (vendorId: string): Promise<boolean> => {
+  return CmSdkReactNativeV3.hasVendorConsent(vendorId);
+};
+
+// ID retrieval methods
+export const getAllPurposesIDs = (): Promise<string[]> => {
+  return CmSdkReactNativeV3.getAllPurposesIDs();
+};
+
+export const getEnabledPurposesIDs = (): Promise<string[]> => {
+  return CmSdkReactNativeV3.getEnabledPurposesIDs();
+};
+
+export const getDisabledPurposesIDs = (): Promise<string[]> => {
+  return CmSdkReactNativeV3.getDisabledPurposesIDs();
+};
+
+export const getAllVendorsIDs = (): Promise<string[]> => {
+  return CmSdkReactNativeV3.getAllVendorsIDs();
+};
+
+export const getEnabledVendorsIDs = (): Promise<string[]> => {
+  return CmSdkReactNativeV3.getEnabledVendorsIDs();
+};
+
+export const getDisabledVendorsIDs = (): Promise<string[]> => {
+  return CmSdkReactNativeV3.getDisabledVendorsIDs();
+};
 
 export default CmSdkReactNativeV3;
