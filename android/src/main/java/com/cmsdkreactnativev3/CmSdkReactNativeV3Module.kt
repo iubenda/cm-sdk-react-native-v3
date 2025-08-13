@@ -33,6 +33,8 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   private var urlConfig: UrlConfig
   private var webViewConfig: ConsentLayerUIConfig
   private val uiThreadHandler = Handler(Looper.getMainLooper())
+  private var isInitialized = false
+
 
   init {
     reactContext.addLifecycleEventListener(this)
@@ -50,6 +52,20 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   private fun runOnUiThread(runnable: Runnable) {
     uiThreadHandler.post(runnable)
   }
+
+  @ReactMethod
+  fun addListener(eventName: String?) {
+    // Required for NativeEventEmitter - React Native calls this automatically
+  }
+
+  @ReactMethod
+  fun removeListeners(count: Int) {
+    // Required for NativeEventEmitter - React Native calls this automatically
+  }
+
+
+
+
 
   @ReactMethod
   fun setWebViewConfig(config: ReadableMap, promise: Promise) {
@@ -99,6 +115,8 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
 
   private fun initializeCMPManager() {
     val activity = currentActivity ?: throw IllegalStateException("Current activity is null")
+    Log.d("CmSdkReactNativeV3", "Initializing CMPManager with activity: $activity, delegate: $this")
+
     cmpManager = CMPManager.getInstance(
       activity,
       urlConfig,
@@ -106,6 +124,14 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
       this
     )
     cmpManager.setActivity(activity)
+
+    if (!isGloballyInitialized) {
+      globalCMPManager = cmpManager
+      isGloballyInitialized = true
+    }
+    isInitialized = true
+
+    Log.d("CmSdkReactNativeV3", "CMPManager initialized with fresh delegate registration")
   }
 
   // MARK: - New methods
@@ -123,14 +149,12 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
         putString("addtlConsent", userStatus.addtlConsent)
         putString("regulation", userStatus.regulation)
 
-        // Convert vendors map
         val vendorsMap = Arguments.createMap()
         userStatus.vendors.forEach { (vendorId, status) ->
           vendorsMap.putString(vendorId, status.toString())
         }
         putMap("vendors", vendorsMap)
 
-        // Convert purposes map
         val purposesMap = Arguments.createMap()
         userStatus.purposes.forEach { (purposeId, status) ->
           purposesMap.putString(purposeId, status.toString())
@@ -196,6 +220,8 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   fun forceOpen(jumpToSettings: Boolean, promise: Promise) {
     scope.launch {
       try {
+        currentActivity?.let { cmpManager.setActivity(it) }
+
         cmpManager.forceOpen(jumpToSettings) { result ->
           if (result.isSuccess) {
             promise.resolve(true)
@@ -216,6 +242,8 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   fun checkAndOpen(jumpToSettings: Boolean, promise: Promise) {
     scope.launch {
       try {
+        currentActivity?.let { cmpManager.setActivity(it) }
+
         cmpManager.checkAndOpen(jumpToSettings) { result ->
           if (result.isSuccess) {
             promise.resolve(true)
@@ -268,7 +296,8 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   fun checkWithServerAndOpenIfNecessary(promise: Promise) {
     scope.launch {
       try {
-        // Call the new method instead, but keep the API signature the same
+        currentActivity?.let { cmpManager.setActivity(it) }
+
         cmpManager.checkAndOpen(false) { result ->
           if (result.isSuccess) {
             promise.resolve(true)
@@ -286,7 +315,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   fun openConsentLayer(promise: Promise) {
     scope.launch {
       try {
-        // Call the new method instead, but keep the API signature the same
+        currentActivity?.let { cmpManager.setActivity(it) }
         cmpManager.forceOpen(false) { result ->
           if (result.isSuccess) {
             promise.resolve(true)
@@ -304,6 +333,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   fun jumpToSettings(promise: Promise) {
     scope.launch {
       try {
+        currentActivity?.let { cmpManager.setActivity(it) }
         cmpManager.forceOpen(true) { result ->
           if (result.isSuccess) {
             promise.resolve(true)
@@ -521,6 +551,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   }
 
   private fun sendEvent(eventName: String, params: WritableMap?) {
+    Log.d("CmSdkReactNativeV3", "sendEvent called: $eventName")
     reactApplicationContext
       .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
       .emit(eventName, params)
@@ -534,21 +565,68 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
 
   companion object {
     const val NAME = "CmSdkReactNativeV3"
+    private var globalCMPManager: CMPManager? = null
+    private var isGloballyInitialized = false
   }
 
   override fun didReceiveConsent(consent: String, jsonObject: Map<String, Any>) {
+    Log.d("CmSdkReactNativeV3", "didReceiveConsent called from native SDK with consent: ${consent.take(50)}...")
     val params = Arguments.createMap().apply {
       putString("consent", consent)
-      putString("jsonObject", jsonObject.toString())
+      putMap("jsonObject", convertMapToWritableMap(jsonObject))
     }
     sendEvent("didReceiveConsent", params)
   }
 
+  private fun convertMapToWritableMap(map: Map<String, Any>): WritableMap {
+    val writableMap = Arguments.createMap()
+    map.forEach { (key, value) ->
+      when (value) {
+        is String -> writableMap.putString(key, value)
+        is Int -> writableMap.putInt(key, value)
+        is Long -> writableMap.putDouble(key, value.toDouble())
+        is Double -> writableMap.putDouble(key, value)
+        is Float -> writableMap.putDouble(key, value.toDouble())
+        is Boolean -> writableMap.putBoolean(key, value)
+        is Map<*, *> -> {
+          @Suppress("UNCHECKED_CAST")
+          writableMap.putMap(key, convertMapToWritableMap(value as Map<String, Any>))
+        }
+        is List<*> -> writableMap.putArray(key, convertListToWritableArray(value))
+        else -> writableMap.putString(key, value.toString())
+      }
+    }
+    return writableMap
+  }
+
+  private fun convertListToWritableArray(list: List<*>): WritableArray {
+    val writableArray = Arguments.createArray()
+    list.forEach { item ->
+      when (item) {
+        is String -> writableArray.pushString(item)
+        is Int -> writableArray.pushInt(item)
+        is Long -> writableArray.pushDouble(item.toDouble())
+        is Double -> writableArray.pushDouble(item)
+        is Float -> writableArray.pushDouble(item.toDouble())
+        is Boolean -> writableArray.pushBoolean(item)
+        is Map<*, *> -> {
+          @Suppress("UNCHECKED_CAST")
+          writableArray.pushMap(convertMapToWritableMap(item as Map<String, Any>))
+        }
+        is List<*> -> writableArray.pushArray(convertListToWritableArray(item))
+        else -> writableArray.pushString(item.toString())
+      }
+    }
+    return writableArray
+  }
+
   override fun didShowConsentLayer() {
+    Log.d("CmSdkReactNativeV3", "didShowConsentLayer called from native SDK - forwarding to React Native")
     sendEvent("didShowConsentLayer", null)
   }
 
   override fun didCloseConsentLayer() {
+    Log.d("CmSdkReactNativeV3", "didCloseConsentLayer called from native SDK - forwarding to React Native")
     sendEvent("didCloseConsentLayer", null)
   }
 

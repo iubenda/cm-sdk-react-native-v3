@@ -1,4 +1,4 @@
-import { NativeModules, Platform, NativeEventEmitter, DeviceEventEmitter } from 'react-native';
+import { NativeModules, Platform, NativeEventEmitter } from 'react-native';
 
 const LINKING_ERROR =
   `The package 'react-native-cm-sdk-react-native-v3' doesn't seem to be linked. Make sure: \n\n` +
@@ -17,8 +17,7 @@ const CmSdkReactNativeV3 = NativeModules.CmSdkReactNativeV3
       }
     );
 
-const isIOS = Platform.OS === 'ios';
-const eventEmitter = isIOS ? new NativeEventEmitter(CmSdkReactNativeV3) : DeviceEventEmitter;
+const eventEmitter = new NativeEventEmitter(CmSdkReactNativeV3);
 
 export const addConsentListener = (
   callback: (consent: string, jsonObject: any) => void

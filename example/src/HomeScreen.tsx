@@ -30,7 +30,7 @@ const HomeScreen: React.FC = () => {
     subscriptions.push(
       addConsentListener((consent, jsonObject) => {
         const message = `Consent received: ${consent.substring(0, 20)}...`;
-        console.log(message, jsonObject);
+        console.log(message);
         setEventLog(prev => [...prev, message]);
         showToast(message);
       })
@@ -79,7 +79,7 @@ const HomeScreen: React.FC = () => {
   const initializeConsent = async () => {
     try {
       await CmSdkReactNativeV3.setUrlConfig({
-        id: '26cba6cf81e76',
+        id: 'f5e3b73592c3c',
         domain: 'delivery.consentmanager.net',
         language: 'EN',
         appName: 'CMDemoAppReactNative',

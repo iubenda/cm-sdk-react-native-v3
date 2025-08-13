@@ -14,6 +14,7 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
 
   private let cmpManager: CMPManager
   private var hasListeners: Bool = false
+  private var isConsentLayerShown: Bool = false
 
   override init() {
     self.cmpManager = CMPManager.shared
@@ -67,11 +68,19 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
   }
 
   @objc public func didShowConsentLayer() {
+    isConsentLayerShown = true
     sendEventIfListening(name: "didShowConsentLayer", body: nil)
   }
 
   @objc public func didCloseConsentLayer() {
-    sendEventIfListening(name: "didCloseConsentLayer", body: nil)
+    // Only emit the close event if the consent layer was actually shown
+    // This prevents the callback from being triggered immediately after showing the layer
+    if isConsentLayerShown {
+      isConsentLayerShown = false
+      sendEventIfListening(name: "didCloseConsentLayer", body: nil)
+    } else {
+      print("CmSdkReactNativeV3: Ignoring didCloseConsentLayer - consent layer was not shown")
+    }
   }
 
   @objc public func didReceiveError(error: String) {
