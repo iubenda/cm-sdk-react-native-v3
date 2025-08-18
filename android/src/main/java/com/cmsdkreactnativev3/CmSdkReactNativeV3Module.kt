@@ -41,8 +41,10 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
     urlConfig = UrlConfig("", "", "", "")
     webViewConfig = ConsentLayerUIConfig(
       position = ConsentLayerUIConfig.Position.FULL_SCREEN,
+      backgroundStyle = ConsentLayerUIConfig.BackgroundStyle.dimmed(android.graphics.Color.BLACK, 0.5f),
       cornerRadius = 0f,
       respectsSafeArea = true,
+      isCancelable = false,
       allowsOrientationChanges = true
     )
   }
@@ -80,8 +82,10 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
 
         this.webViewConfig = ConsentLayerUIConfig(
           position = position,
+          backgroundStyle = ConsentLayerUIConfig.BackgroundStyle.dimmed(android.graphics.Color.BLACK, 0.5f),
           cornerRadius = (config.getDouble("cornerRadius") ?: 0.0).toFloat(),
           respectsSafeArea = config.getBoolean("respectsSafeArea"),
+          isCancelable = false,
           allowsOrientationChanges = config.getBoolean("allowsOrientationChanges")
         )
 
