@@ -89,7 +89,6 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
           allowsOrientationChanges = config.getBoolean("allowsOrientationChanges")
         )
 
-        // Store this config to use when initializing CMPManager
         promise.resolve(null)
       } catch (e: Exception) {
         promise.reject("ERROR", "Failed to set WebView config: ${e.message}")
@@ -129,6 +128,20 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
     )
     cmpManager.setActivity(activity)
 
+    cmpManager.setOnClickLinkCallback { url ->
+      Log.d("CmSdkReactNativeV3", "Link clicked: $url")
+      val params = Arguments.createMap().apply {
+        putString("url", url)
+      }
+      sendEvent("onClickLink", params)
+
+      when {
+        !url.contains("google.com") -> true
+        url.contains("privacy") || url.contains("terms") -> true
+        else -> false
+      }
+    }
+
     if (!isGloballyInitialized) {
       globalCMPManager = cmpManager
       isGloballyInitialized = true
@@ -137,8 +150,6 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
 
     Log.d("CmSdkReactNativeV3", "CMPManager initialized with fresh delegate registration")
   }
-
-  // MARK: - New methods
 
   /**
    * Gets the comprehensive user consent status
@@ -293,8 +304,6 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
       promise.reject("ERROR", "Failed to reset consent management data: ${e.message}", e)
     }
   }
-
-  // MARK: - Deprecated methods (kept for backward compatibility)
 
   @ReactMethod
   fun checkWithServerAndOpenIfNecessary(promise: Promise) {
@@ -534,7 +543,6 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
     return list
   }
 
-  // LifecycleEventListener methods
   override fun onHostResume() {
     if (::cmpManager.isInitialized) {
       cmpManager.onApplicationResume()

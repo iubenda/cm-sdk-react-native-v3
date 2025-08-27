@@ -41,6 +41,12 @@ export const addErrorListener = (callback: (error: string) => void) => {
   });
 };
 
+export const addClickLinkListener = (callback: (url: string) => void) => {
+  return eventEmitter.addListener('onClickLink', (event) => {
+    callback(event.url);
+  });
+};
+
 // Core configuration methods
 export const setUrlConfig = CmSdkReactNativeV3.setUrlConfig;
 export const setWebViewConfig = CmSdkReactNativeV3.setWebViewConfig;

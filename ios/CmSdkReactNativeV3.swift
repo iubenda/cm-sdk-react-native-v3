@@ -15,25 +15,42 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
   private let cmpManager: CMPManager
   private var hasListeners: Bool = false
   private var isConsentLayerShown: Bool = false
+  private var shouldHandleLinkClicks: Bool = false
 
   override init() {
     self.cmpManager = CMPManager.shared
     super.init()
-    // Set ourselves as the delegate to receive events
     self.cmpManager.delegate = self
+
+    self.cmpManager.setLinkClickHandler { [weak self] url in
+      let urlString = url.absoluteString
+
+      guard let strongSelf = self, strongSelf.shouldHandleLinkClicks else {
+        print("CmSdkReactNativeV3: Allowing navigation during SDK initialization: \(urlString)")
+        return false
+      }
+
+      print("CmSdkReactNativeV3: Link clicked: \(urlString)")
+      strongSelf.sendEventIfListening(name: "onClickLink", body: ["url": urlString])
+
+      if !urlString.contains("google.com") ||
+         urlString.contains("privacy") ||
+         urlString.contains("terms") {
+        return true
+      } else {
+        return false
+      }
+    }
   }
 
-  // Required override for RCTEventEmitter
   override static func requiresMainQueueSetup() -> Bool {
     return true
   }
 
-  // Define the events that this module can emit
   override func supportedEvents() -> [String]! {
-    return ["didReceiveConsent", "didShowConsentLayer", "didCloseConsentLayer", "didReceiveError"]
+    return ["didReceiveConsent", "didShowConsentLayer", "didCloseConsentLayer", "didReceiveError", "onClickLink"]
   }
 
-  // Track when listeners are added or removed
   override func startObserving() {
     hasListeners = true
   }
@@ -42,7 +59,6 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
     hasListeners = false
   }
 
-  // Helper method to check if we have listeners before sending events
   private func sendEventIfListening(name: String, body: [String: Any]?) {
     if hasListeners {
       self.sendEvent(withName: name, body: body)
@@ -60,7 +76,6 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
   // MARK: - CMPManagerDelegate methods
 
   @objc public func didReceiveConsent(consent: String, jsonObject: [String: Any]) {
-    // Forward the consent event to React Native
     sendEventIfListening(name: "didReceiveConsent", body: [
       "consent": consent,
       "jsonObject": jsonObject
@@ -69,12 +84,11 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
 
   @objc public func didShowConsentLayer() {
     isConsentLayerShown = true
+    shouldHandleLinkClicks = true
     sendEventIfListening(name: "didShowConsentLayer", body: nil)
   }
 
   @objc public func didCloseConsentLayer() {
-    // Only emit the close event if the consent layer was actually shown
-    // This prevents the callback from being triggered immediately after showing the layer
     if isConsentLayerShown {
       isConsentLayerShown = false
       sendEventIfListening(name: "didCloseConsentLayer", body: nil)

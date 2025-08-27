@@ -7,13 +7,16 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  EmitterSubscription,
+  Linking,
+  Alert,
 } from 'react-native';
+import type { EmitterSubscription } from 'react-native';
 import CmSdkReactNativeV3, {
   addConsentListener,
   addShowConsentLayerListener,
   addCloseConsentLayerListener,
   addErrorListener,
+  addClickLinkListener,
 } from 'cm-sdk-react-native-v3';
 
 const HomeScreen: React.FC = () => {
@@ -28,7 +31,7 @@ const HomeScreen: React.FC = () => {
 
     // Set up consent event listener
     subscriptions.push(
-      addConsentListener((consent, jsonObject) => {
+      addConsentListener((consent: string, _jsonObject: any) => {
         const message = `Consent received: ${consent.substring(0, 20)}...`;
         console.log(message);
         setEventLog(prev => [...prev, message]);
@@ -58,11 +61,56 @@ const HomeScreen: React.FC = () => {
 
     // Set up error listener
     subscriptions.push(
-      addErrorListener((error) => {
+      addErrorListener((error: string) => {
         const message = `Error: ${error}`;
         console.error(message);
         setEventLog(prev => [...prev, message]);
         showToast(message);
+      })
+    );
+
+    // Set up link click listener with conditional handling
+    subscriptions.push(
+      addClickLinkListener((url: string) => {
+        const message = `Link clicked: ${url}`;
+        console.log(message);
+        setEventLog(prev => [...prev, message]);
+
+        if (url.includes('glitch')) {
+          Alert.alert(
+            'External Link Detected',
+            `Opening Google URL in external browser: ${url}`,
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => {
+                  showToast('Link opening cancelled');
+                  setEventLog(prev => [...prev, 'Google link cancelled by user']);
+                }
+              },
+              {
+                text: 'Open',
+                onPress: () => {
+                  Linking.openURL(url)
+                    .then(() => {
+                      showToast('Google link opened in external browser');
+                      setEventLog(prev => [...prev, 'Google link opened externally']);
+                    })
+                    .catch((error) => {
+                      console.error('Error opening URL:', error);
+                      showToast('Failed to open Google link');
+                      setEventLog(prev => [...prev, `Error opening Google link: ${error.message}`]);
+                    });
+                }
+              }
+            ]
+          );
+        } else {
+          // For other URLs, just show a toast and let WebView handle them
+          showToast(`Other link detected: ${url.substring(0, 50)}${url.length > 50 ? '...' : ''}`);
+          setEventLog(prev => [...prev, 'Other link will be handled by WebView']);
+        }
       })
     );
 
@@ -79,7 +127,7 @@ const HomeScreen: React.FC = () => {
   const initializeConsent = async () => {
     try {
       await CmSdkReactNativeV3.setUrlConfig({
-        id: 'f5e3b73592c3c',
+        id: 'your-code-id-here',
         domain: 'delivery.consentmanager.net',
         language: 'EN',
         appName: 'CMDemoAppReactNative',
