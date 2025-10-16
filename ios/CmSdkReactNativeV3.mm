@@ -15,6 +15,10 @@ RCT_EXTERN_METHOD(setWebViewConfig:(NSDictionary *)config
         withResolver:(RCTPromiseResolveBlock)resolve
         withRejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(setATTStatus:(NSInteger)status
+        withResolver:(RCTPromiseResolveBlock)resolve
+        withRejecter:(RCTPromiseRejectBlock)reject)
+
 // New methods
 RCT_EXTERN_METHOD(checkAndOpen:(BOOL)jumpToSettings
         withResolver:(RCTPromiseResolveBlock)resolve

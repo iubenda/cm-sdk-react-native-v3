@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Linking,
   Alert,
+  Platform,
 } from 'react-native';
 import type { EmitterSubscription } from 'react-native';
 import CmSdkReactNativeV3, {
@@ -19,10 +20,27 @@ import CmSdkReactNativeV3, {
   addClickLinkListener,
 } from 'cm-sdk-react-native-v3';
 
+// Import the TurboModule to detect architecture
+// Note: This import will work when the package is properly linked
+let NativeCmSdkReactNativeV3: any = null;
+try {
+  NativeCmSdkReactNativeV3 = require('cm-sdk-react-native-v3/src/NativeCmSdkReactNativeV3').default;
+} catch (error) {
+  // TurboModule not available, will use legacy detection
+  console.log('TurboModule import failed, using legacy detection');
+}
+
 const HomeScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [eventLog, setEventLog] = useState<string[]>([]);
+  const [architectureInfo, setArchitectureInfo] = useState<{
+    type: 'Legacy' | 'New Architecture';
+    details: string;
+  }>({ type: 'Legacy', details: 'Detecting...' });
+  const [performanceMetrics, setPerformanceMetrics] = useState<{
+    [key: string]: number;
+  }>({});
 
   // Set up event listeners
   useEffect(() => {
@@ -121,16 +139,45 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    detectArchitecture();
     initializeConsent();
   }, []);
+
+  const detectArchitecture = () => {
+    try {
+      // Check if TurboModule is available
+      const isTurboModule = NativeCmSdkReactNativeV3 !== null && NativeCmSdkReactNativeV3 !== undefined;
+
+      if (isTurboModule) {
+        setArchitectureInfo({
+          type: 'New Architecture',
+          details: `TurboModule detected on ${Platform.OS}. Enhanced performance and type safety enabled.`
+        });
+        setEventLog(prev => [...prev, '🚀 New Architecture (TurboModule) detected!']);
+      } else {
+        setArchitectureInfo({
+          type: 'Legacy',
+          details: `Legacy Bridge detected on ${Platform.OS}. Using traditional NativeModules.`
+        });
+        setEventLog(prev => [...prev, '📱 Legacy Architecture detected']);
+      }
+    } catch (error) {
+      setArchitectureInfo({
+        type: 'Legacy',
+        details: `Architecture detection failed: ${error}. Assuming Legacy Bridge.`
+      });
+      setEventLog(prev => [...prev, `⚠️ Architecture detection error: ${error}`]);
+    }
+  };
 
   const initializeConsent = async () => {
     try {
       await CmSdkReactNativeV3.setUrlConfig({
-        id: 'your-code-id-here',
+        id: 'f5e3b73592c3c',
         domain: 'delivery.consentmanager.net',
         language: 'EN',
         appName: 'CMDemoAppReactNative',
+        noHash: true,
       });
 
       await CmSdkReactNativeV3.setWebViewConfig({
@@ -140,6 +187,13 @@ const HomeScreen: React.FC = () => {
         respectsSafeArea: true,
         allowsOrientationChanges: true,
       });
+
+      // iOS-only: Set ATT status if on iOS
+      if (Platform.OS === 'ios') {
+        // ATT status values: 0=notDetermined, 1=restricted, 2=denied, 3=authorized
+        // In a real app, you would get this from AppTrackingTransparency framework
+        await CmSdkReactNativeV3.setATTStatus(0);
+      }
 
       await CmSdkReactNativeV3.checkAndOpen(false);
       console.log('CMPManager initialized and open consent layer opened if necessary');
@@ -158,12 +212,32 @@ const HomeScreen: React.FC = () => {
   const handleApiCall = async (
     apiCall: () => Promise<any>,
     successMessage: (result: any) => string,
-    errorMessage: string = 'An error occurred'
+    errorMessage: string = 'An error occurred',
+    methodName?: string
   ) => {
+    const startTime = Date.now();
     try {
       const result = await apiCall();
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+
+      if (methodName) {
+        setPerformanceMetrics(prev => ({
+          ...prev,
+          [methodName]: duration
+        }));
+        setEventLog(prev => [...prev, `⚡ ${methodName}: ${duration}ms (${architectureInfo.type})`]);
+      }
+
       showToast(successMessage(result));
     } catch (error) {
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+
+      if (methodName) {
+        setEventLog(prev => [...prev, `❌ ${methodName} failed after ${duration}ms: ${error}`]);
+      }
+
       showToast(`${errorMessage}: ${error}`);
     }
   };
@@ -173,77 +247,99 @@ const HomeScreen: React.FC = () => {
       title: 'Get User Status',
       onPress: () => handleApiCall(
         CmSdkReactNativeV3.getUserStatus,
-        (result) => `User Status: ${JSON.stringify(result).substring(0, 100)}...`
+        (result) => `User Status: ${JSON.stringify(result).substring(0, 100)}...`,
+        'Failed to get user status',
+        'getUserStatus'
       ),
     },
     {
       title: 'Get CMP String',
       onPress: () => handleApiCall(
         CmSdkReactNativeV3.exportCMPInfo,
-        (result) => `CMP String: ${result}`
+        (result) => `CMP String: ${result}`,
+        'Failed to export CMP info',
+        'exportCMPInfo'
       ),
     },
     {
       title: 'Get Status for Purpose c53',
       onPress: () => handleApiCall(
         () => CmSdkReactNativeV3.getStatusForPurpose('c53'),
-        (result) => `Purpose Status: ${result}`
+        (result) => `Purpose Status: ${result}`,
+        'Failed to get purpose status',
+        'getStatusForPurpose'
       ),
     },
     {
       title: 'Get Status for Vendor s2789',
       onPress: () => handleApiCall(
         () => CmSdkReactNativeV3.getStatusForVendor('s2789'),
-        (result) => `Vendor Status: ${result}`
+        (result) => `Vendor Status: ${result}`,
+        'Failed to get vendor status',
+        'getStatusForVendor'
       ),
     },
     {
       title: 'Get Google Consent Mode Status',
       onPress: () => handleApiCall(
         CmSdkReactNativeV3.getGoogleConsentModeStatus,
-        (result) => `Google Consent: ${JSON.stringify(result)}`
+        (result) => `Google Consent: ${JSON.stringify(result)}`,
+        'Failed to get Google consent mode',
+        'getGoogleConsentModeStatus'
       ),
     },
     {
       title: 'Enable Purposes c52 and c53',
       onPress: () => handleApiCall(
         () => CmSdkReactNativeV3.acceptPurposes(['c52', 'c53'], true),
-        () => 'Purposes enabled'
+        () => 'Purposes enabled',
+        'Failed to enable purposes',
+        'acceptPurposes'
       ),
     },
     {
       title: 'Disable Purposes c52 and c53',
       onPress: () => handleApiCall(
         () => CmSdkReactNativeV3.rejectPurposes(['c52', 'c53'], true),
-        () => 'Purposes disabled'
+        () => 'Purposes disabled',
+        'Failed to disable purposes',
+        'rejectPurposes'
       ),
     },
     {
       title: 'Enable Vendors s2790 and s2791',
       onPress: () => handleApiCall(
         () => CmSdkReactNativeV3.acceptVendors(['s2790', 's2791']),
-        () => 'Vendors Enabled'
+        () => 'Vendors Enabled',
+        'Failed to enable vendors',
+        'acceptVendors'
       ),
     },
     {
       title: 'Disable Vendors s2790 and s2791',
       onPress: () => handleApiCall(
         () => CmSdkReactNativeV3.rejectVendors(['s2790', 's2791']),
-        () => 'Vendors Disabled'
+        () => 'Vendors Disabled',
+        'Failed to disable vendors',
+        'rejectVendors'
       ),
     },
     {
       title: 'Reject All',
       onPress: () => handleApiCall(
         CmSdkReactNativeV3.rejectAll,
-        () => 'All consents rejected'
+        () => 'All consents rejected',
+        'Failed to reject all',
+        'rejectAll'
       ),
     },
     {
       title: 'Accept All',
       onPress: () => handleApiCall(
         CmSdkReactNativeV3.acceptAll,
-        () => 'All consents accepted'
+        () => 'All consents accepted',
+        'Failed to accept all',
+        'acceptAll'
       ),
     },
     {
@@ -278,7 +374,7 @@ const HomeScreen: React.FC = () => {
       title: 'Import CMP String',
       onPress: () => handleApiCall(
         () => CmSdkReactNativeV3.importCMPInfo(
-          'Q1FERkg3QVFERkg3QUFmR01CSVRCQkVnQUFBQUFBQUFBQWlnQUFBQUFBQUEjXzUxXzUyXzUzXzU0XzU1XzU2XyNfczI3ODlfczI3OTBfczI3OTFfczI2OTdfczk3MV9VXyMxLS0tIw'
+          'Q1FaRWVQQVFaRWVQQUFmYjRCRU5DQUZnQVBMQUFFTEFBQWlnRjV3QVFGNWdYbkFCQVhtQUFBI181MV81Ml81NF8jX3MxMDUyX3MxX3MyNl9zMjYxMl9zOTA1X3MxNDQ4X2M3MzczN19VXyMxLS0tIw'
         ),
         () => 'New consent string imported successfully'
       ),
@@ -304,8 +400,28 @@ const HomeScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>CM React Native DemoApp</Text>
-        <Text style={styles.subtitle}>Using New API</Text>
+        <Text style={styles.title}>CM React Native DemoApp v3.6.0</Text>
+        <Text style={styles.subtitle}>New Architecture Compatibility Test</Text>
+
+        {/* Architecture Info Section */}
+        <View style={[styles.infoContainer, architectureInfo.type === 'New Architecture' ? styles.newArchContainer : styles.legacyArchContainer]}>
+          <Text style={styles.infoTitle}>
+            {architectureInfo.type === 'New Architecture' ? '🚀' : '📱'} Architecture: {architectureInfo.type}
+          </Text>
+          <Text style={styles.infoDetails}>{architectureInfo.details}</Text>
+        </View>
+
+        {/* Performance Metrics Section */}
+        {Object.keys(performanceMetrics).length > 0 && (
+          <View style={styles.metricsContainer}>
+            <Text style={styles.metricsTitle}>⚡ Performance Metrics (ms):</Text>
+            {Object.entries(performanceMetrics).map(([method, time]) => (
+              <Text key={method} style={styles.metricText}>
+                {method}: {time}ms
+              </Text>
+            ))}
+          </View>
+        )}
 
         {/* Event Logger Section */}
         <View style={styles.eventLogContainer}>
@@ -366,6 +482,49 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
     color: '#555',
+  },
+  infoContainer: {
+    marginBottom: 15,
+    padding: 15,
+    borderRadius: 8,
+    borderWidth: 2,
+  },
+  newArchContainer: {
+    backgroundColor: '#e8f5e8',
+    borderColor: '#4caf50',
+  },
+  legacyArchContainer: {
+    backgroundColor: '#fff3e0',
+    borderColor: '#ff9800',
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  infoDetails: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  metricsContainer: {
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: '#f0f8ff',
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#2196f3',
+  },
+  metricsTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#1976d2',
+  },
+  metricText: {
+    fontSize: 12,
+    color: '#333',
+    marginBottom: 2,
   },
   eventLogContainer: {
     marginBottom: 20,

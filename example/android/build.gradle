@@ -17,8 +17,13 @@ buildscript {
     }
 
     dependencies {
+        // Override AGP version to 8.9.1 to support androidx.core:core-ktx:1.17.0
+        classpath "com.android.tools.build:gradle:8.9.1"
         getReactNativeDependencies().each { dependency ->
-            classpath(dependency)
+            // Skip the AGP dependency from react-native-test-app
+            if (!dependency.toString().contains("com.android.tools.build:gradle")) {
+                classpath(dependency)
+            }
         }
     }
 }
@@ -42,4 +47,21 @@ allprojects {
         mavenLocal()
         google()
     }
+}
+
+// Configure all Android modules to use the correct compileSdk version
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                compileSdk 36
+            }
+        }
+    }
+}
+
+// Ensure Gradle wrapper uses the correct version for AGP 8.9.1
+tasks.named("wrapper", Wrapper) {
+    gradleVersion = "8.11.1"
+    distributionType = Wrapper.DistributionType.ALL
 }

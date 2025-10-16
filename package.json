@@ -1,6 +1,6 @@
 {
   "name": "cm-sdk-react-native-v3",
-  "version": "3.5.3",
+  "version": "3.6.0",
   "description": "Consent Management React Native Library by consentmanager.net",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
@@ -175,5 +175,10 @@
     "type": "module-legacy",
     "languages": "kotlin-swift",
     "version": "0.41.2"
+  },
+  "codegenConfig": {
+    "name": "CmSdkReactNativeV3Spec",
+    "type": "modules",
+    "jsSrcsDir": "src"
   }
 }

@@ -142,6 +142,12 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
 
   // MARK: - New methods
 
+  @objc(setATTStatus:withResolver:withRejecter:)
+  func setATTStatus(_ status: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+      cmpManager.setATTStatus(status.intValue)
+      resolve(nil)
+  }
+
   @objc(getUserStatus:withRejecter:)
   func getUserStatus(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       do {
@@ -200,111 +206,10 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
       }
   }
 
-  // MARK: - Deprecated but maintained methods
-
-  @objc(checkWithServerAndOpenIfNecessary:withRejecter:)
-  func checkWithServerAndOpenIfNecessary(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      DispatchQueue.main.async { [weak self] in
-          guard let self = self else {
-              reject("ERROR", "Bridge object deallocated", nil)
-              return
-          }
-          self.cmpManager.checkWithServerAndOpenIfNecessary { success in
-              resolve(success)
-          }
-      }
-  }
-
-  @objc(openConsentLayer:withRejecter:)
-  func openConsentLayer(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      DispatchQueue.main.async { [weak self] in
-          guard let self = self else {
-              reject("ERROR", "Bridge object deallocated", nil)
-              return
-          }
-          self.cmpManager.openConsentLayer { success in
-              resolve(success)
-          }
-      }
-  }
-
-  @objc(jumpToSettings:withRejecter:)
-  func jumpToSettings(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      DispatchQueue.main.async { [weak self] in
-          guard let self = self else {
-              reject("ERROR", "Bridge object deallocated", nil)
-              return
-          }
-        self.cmpManager.jumpToSettings(completion: { success in resolve(success)})
-          resolve(nil)
-      }
-  }
-
-  @objc(checkIfConsentIsRequired:withRejecter:)
-  func checkIfConsentIsRequired(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      self.cmpManager.checkIfConsentIsRequired { success in
-          resolve(success)
-      }
-  }
-
-  @objc(hasUserChoice:withRejecter:)
-  func hasUserChoice(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      let result = self.cmpManager.hasUserChoice()
-      resolve(result)
-  }
-
-  @objc(hasPurposeConsent:withResolver:withRejecter:)
-  func hasPurposeConsent(_ purposeId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      let result = self.cmpManager.hasPurposeConsent(id: purposeId)
-        resolve(result)
-  }
-
-  @objc(hasVendorConsent:withResolver:withRejecter:)
-  func hasVendorConsent(_ vendorId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      let result = self.cmpManager.hasVendorConsent(id: vendorId)
-        resolve(result)
-  }
-
   @objc(exportCMPInfo:withRejecter:)
   func exportCMPInfo(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       let info = self.cmpManager.exportCMPInfo()
       resolve(info)
-  }
-
-  @objc(getAllPurposesIDs:withRejecter:)
-  func getAllPurposesIDs(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      let purposeIDs = self.cmpManager.getAllPurposesIDs()
-      resolve(purposeIDs)
-  }
-
-  @objc(getEnabledPurposesIDs:withRejecter:)
-  func getEnabledPurposesIDs(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      let purposeIDs = self.cmpManager.getEnabledPurposesIDs()
-      resolve(purposeIDs)
-  }
-
-  @objc(getDisabledPurposesIDs:withRejecter:)
-  func getDisabledPurposesIDs(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      let purposeIDs = self.cmpManager.getDisabledPurposesIDs()
-      resolve(purposeIDs)
-  }
-
-  @objc(getAllVendorsIDs:withRejecter:)
-  func getAllVendorsIDs(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      let vendorIDs = self.cmpManager.getAllVendorsIDs()
-      resolve(vendorIDs)
-  }
-
-  @objc(getEnabledVendorsIDs:withRejecter:)
-  func getEnabledVendorsIDs(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      let vendorIDs = self.cmpManager.getEnabledVendorsIDs()
-      resolve(vendorIDs)
-  }
-
-  @objc(getDisabledVendorsIDs:withRejecter:)
-  func getDisabledVendorsIDs(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      let vendorIDs = self.cmpManager.getDisabledVendorsIDs()
-      resolve(vendorIDs)
   }
 
   @objc(acceptVendors:withResolver:withRejecter:)
@@ -374,3 +279,11 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
       resolve(nil)
   }
 }
+
+#if RCT_NEW_ARCH_ENABLED
+import CmSdkReactNativeV3Spec
+
+extension CmSdkReactNativeV3: NativeCmSdkReactNativeV3Spec {
+  // Protocol is automatically satisfied by @objc methods above
+}
+#endif
