@@ -1,6 +1,26 @@
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
+// Event payload types for better TypeScript support
+export type ConsentReceivedEvent = {
+  consent: string;
+  jsonObject: Record<string, any>;
+};
+
+export type ErrorEvent = {
+  error: string;
+};
+
+export type LinkClickEvent = {
+  url: string;
+};
+
+export type ATTStatusChangeEvent = {
+  oldStatus: number;
+  newStatus: number;
+  lastUpdated: number;
+};
+
 export interface Spec extends TurboModule {
   // Configuration methods
   setUrlConfig(config: {

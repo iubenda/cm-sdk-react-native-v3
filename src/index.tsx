@@ -1,5 +1,10 @@
 import { NativeModules, Platform, NativeEventEmitter } from 'react-native';
-import NativeCmSdkReactNativeV3 from './NativeCmSdkReactNativeV3';
+import NativeCmSdkReactNativeV3, {
+  type ConsentReceivedEvent,
+  type ErrorEvent,
+  type LinkClickEvent,
+  type ATTStatusChangeEvent,
+} from './NativeCmSdkReactNativeV3';
 
 const LINKING_ERROR =
   `The package 'react-native-cm-sdk-react-native-v3' doesn't seem to be linked. Make sure: \n\n` +
@@ -24,7 +29,7 @@ const eventEmitter = new NativeEventEmitter(CmSdkReactNativeV3);
 export const addConsentListener = (
   callback: (consent: string, jsonObject: any) => void
 ) => {
-  return eventEmitter.addListener('didReceiveConsent', (event) => {
+  return eventEmitter.addListener('didReceiveConsent', (event: ConsentReceivedEvent) => {
     callback(event.consent, event.jsonObject);
   });
 };
@@ -38,15 +43,19 @@ export const addCloseConsentLayerListener = (callback: () => void) => {
 };
 
 export const addErrorListener = (callback: (error: string) => void) => {
-  return eventEmitter.addListener('didReceiveError', (event) => {
+  return eventEmitter.addListener('didReceiveError', (event: ErrorEvent) => {
     callback(event.error);
   });
 };
 
 export const addClickLinkListener = (callback: (url: string) => void) => {
-  return eventEmitter.addListener('onClickLink', (event) => {
+  return eventEmitter.addListener('onClickLink', (event: LinkClickEvent) => {
     callback(event.url);
   });
+};
+
+export const addATTStatusChangeListener = (callback: (event: ATTStatusChangeEvent) => void) => {
+  return eventEmitter.addListener('didChangeATTStatus', callback);
 };
 
 // Core configuration methods
@@ -74,5 +83,13 @@ export const acceptPurposes = CmSdkReactNativeV3.acceptPurposes;
 export const rejectPurposes = CmSdkReactNativeV3.rejectPurposes;
 export const rejectAll = CmSdkReactNativeV3.rejectAll;
 export const acceptAll = CmSdkReactNativeV3.acceptAll;
+
+// Re-export event types for consumer convenience
+export type {
+  ConsentReceivedEvent,
+  ErrorEvent,
+  LinkClickEvent,
+  ATTStatusChangeEvent,
+};
 
 export default CmSdkReactNativeV3;

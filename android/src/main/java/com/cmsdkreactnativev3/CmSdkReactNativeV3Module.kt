@@ -14,7 +14,6 @@ import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
-import com.facebook.react.modules.core.DeviceEventManagerModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -470,9 +469,8 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
 
   private fun sendEvent(eventName: String, params: WritableMap?) {
     Log.d("CmSdkReactNativeV3", "sendEvent called: $eventName")
-    reactApplicationContext
-      .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-      .emit(eventName, params)
+    // Bridgeless-compatible: emitDeviceEvent works in all modes (legacy, new arch, bridgeless)
+    reactApplicationContext.emitDeviceEvent(eventName, params)
   }
 
   private fun List<String>.toWritableArray(): WritableArray {

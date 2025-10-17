@@ -20,15 +20,8 @@ import CmSdkReactNativeV3, {
   addClickLinkListener,
 } from 'cm-sdk-react-native-v3';
 
-// Import the TurboModule to detect architecture
-// Note: This import will work when the package is properly linked
-let NativeCmSdkReactNativeV3: any = null;
-try {
-  NativeCmSdkReactNativeV3 = require('cm-sdk-react-native-v3/src/NativeCmSdkReactNativeV3').default;
-} catch (error) {
-  // TurboModule not available, will use legacy detection
-  console.log('TurboModule import failed, using legacy detection');
-}
+// Detect architecture by checking if TurboModule registry is available
+const isTurboModuleEnabled = global.__turboModuleProxy != null;
 
 const HomeScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -145,10 +138,7 @@ const HomeScreen: React.FC = () => {
 
   const detectArchitecture = () => {
     try {
-      // Check if TurboModule is available
-      const isTurboModule = NativeCmSdkReactNativeV3 !== null && NativeCmSdkReactNativeV3 !== undefined;
-
-      if (isTurboModule) {
+      if (isTurboModuleEnabled) {
         setArchitectureInfo({
           type: 'New Architecture',
           details: `TurboModule detected on ${Platform.OS}. Enhanced performance and type safety enabled.`
