@@ -21,7 +21,7 @@ import CmSdkReactNativeV3, {
 } from 'cm-sdk-react-native-v3';
 
 // Detect architecture by checking if TurboModule registry is available
-const isTurboModuleEnabled = global.__turboModuleProxy != null;
+const isTurboModuleEnabled = (global as any).__turboModuleProxy != null;
 
 const HomeScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);

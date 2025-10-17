@@ -4,6 +4,10 @@ import NativeCmSdkReactNativeV3, {
   type ErrorEvent,
   type LinkClickEvent,
   type ATTStatusChangeEvent,
+  type UrlConfig,
+  type WebViewConfig,
+  type UserStatus,
+  type GoogleConsentModeStatus,
 } from './NativeCmSdkReactNativeV3';
 
 const LINKING_ERROR =
@@ -27,7 +31,7 @@ const CmSdkReactNativeV3 = NativeCmSdkReactNativeV3 ?? (NativeModules.CmSdkReact
 const eventEmitter = new NativeEventEmitter(CmSdkReactNativeV3);
 
 export const addConsentListener = (
-  callback: (consent: string, jsonObject: any) => void
+  callback: (consent: string, jsonObject: Object) => void
 ) => {
   return eventEmitter.addListener('didReceiveConsent', (event: ConsentReceivedEvent) => {
     callback(event.consent, event.jsonObject);
@@ -59,37 +63,91 @@ export const addATTStatusChangeListener = (callback: (event: ATTStatusChangeEven
 };
 
 // Core configuration methods
-export const setUrlConfig = CmSdkReactNativeV3.setUrlConfig;
-export const setWebViewConfig = CmSdkReactNativeV3.setWebViewConfig;
-export const setATTStatus = CmSdkReactNativeV3.setATTStatus;
+export const setUrlConfig = (config: UrlConfig): Promise<void> => {
+  return CmSdkReactNativeV3.setUrlConfig(config);
+};
+
+export const setWebViewConfig = (config: WebViewConfig): Promise<void> => {
+  return CmSdkReactNativeV3.setWebViewConfig(config);
+};
+
+export const setATTStatus = (status: number): Promise<void> => {
+  return CmSdkReactNativeV3.setATTStatus(status);
+};
 
 // Main interaction methods
-export const checkAndOpen = CmSdkReactNativeV3.checkAndOpen;
-export const forceOpen = CmSdkReactNativeV3.forceOpen;
+export const checkAndOpen = (jumpToSettings: boolean): Promise<boolean> => {
+  return CmSdkReactNativeV3.checkAndOpen(jumpToSettings);
+};
+
+export const forceOpen = (jumpToSettings: boolean): Promise<boolean> => {
+  return CmSdkReactNativeV3.forceOpen(jumpToSettings);
+};
 
 // Consent status methods
-export const getUserStatus = CmSdkReactNativeV3.getUserStatus;
-export const getStatusForPurpose = CmSdkReactNativeV3.getStatusForPurpose;
-export const getStatusForVendor = CmSdkReactNativeV3.getStatusForVendor;
-export const getGoogleConsentModeStatus = CmSdkReactNativeV3.getGoogleConsentModeStatus;
-export const exportCMPInfo = CmSdkReactNativeV3.exportCMPInfo;
-export const importCMPInfo = CmSdkReactNativeV3.importCMPInfo;
-export const resetConsentManagementData = CmSdkReactNativeV3.resetConsentManagementData;
+export const getUserStatus = (): Promise<UserStatus> => {
+  return CmSdkReactNativeV3.getUserStatus();
+};
+
+export const getStatusForPurpose = (purposeId: string): Promise<string> => {
+  return CmSdkReactNativeV3.getStatusForPurpose(purposeId);
+};
+
+export const getStatusForVendor = (vendorId: string): Promise<string> => {
+  return CmSdkReactNativeV3.getStatusForVendor(vendorId);
+};
+
+export const getGoogleConsentModeStatus = (): Promise<GoogleConsentModeStatus> => {
+  return CmSdkReactNativeV3.getGoogleConsentModeStatus();
+};
+
+export const exportCMPInfo = (): Promise<string> => {
+  return CmSdkReactNativeV3.exportCMPInfo();
+};
+
+export const importCMPInfo = (cmpString: string): Promise<boolean> => {
+  return CmSdkReactNativeV3.importCMPInfo(cmpString);
+};
+
+export const resetConsentManagementData = (): Promise<boolean> => {
+  return CmSdkReactNativeV3.resetConsentManagementData();
+};
 
 // Consent modification methods
-export const acceptVendors = CmSdkReactNativeV3.acceptVendors;
-export const rejectVendors = CmSdkReactNativeV3.rejectVendors;
-export const acceptPurposes = CmSdkReactNativeV3.acceptPurposes;
-export const rejectPurposes = CmSdkReactNativeV3.rejectPurposes;
-export const rejectAll = CmSdkReactNativeV3.rejectAll;
-export const acceptAll = CmSdkReactNativeV3.acceptAll;
+export const acceptVendors = (vendors: string[]): Promise<boolean> => {
+  return CmSdkReactNativeV3.acceptVendors(vendors);
+};
 
-// Re-export event types for consumer convenience
+export const rejectVendors = (vendors: string[]): Promise<boolean> => {
+  return CmSdkReactNativeV3.rejectVendors(vendors);
+};
+
+export const acceptPurposes = (purposes: string[], updatePurpose: boolean): Promise<boolean> => {
+  return CmSdkReactNativeV3.acceptPurposes(purposes, updatePurpose);
+};
+
+export const rejectPurposes = (purposes: string[], updateVendor: boolean): Promise<boolean> => {
+  return CmSdkReactNativeV3.rejectPurposes(purposes, updateVendor);
+};
+
+export const rejectAll = (): Promise<boolean> => {
+  return CmSdkReactNativeV3.rejectAll();
+};
+
+export const acceptAll = (): Promise<boolean> => {
+  return CmSdkReactNativeV3.acceptAll();
+};
+
+// Re-export types for consumer convenience
 export type {
   ConsentReceivedEvent,
   ErrorEvent,
   LinkClickEvent,
   ATTStatusChangeEvent,
+  UrlConfig,
+  WebViewConfig,
+  UserStatus,
+  GoogleConsentModeStatus,
 };
 
 export default CmSdkReactNativeV3;

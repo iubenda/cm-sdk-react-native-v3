@@ -4,7 +4,7 @@ import { TurboModuleRegistry } from 'react-native';
 // Event payload types for better TypeScript support
 export type ConsentReceivedEvent = {
   consent: string;
-  jsonObject: Record<string, any>;
+  jsonObject: Object;
 };
 
 export type ErrorEvent = {
@@ -21,22 +21,43 @@ export type ATTStatusChangeEvent = {
   lastUpdated: number;
 };
 
+// Additional type definitions for better TypeScript support
+export type UrlConfig = {
+  id: string;
+  domain: string;
+  language: string;
+  appName: string;
+  noHash?: boolean;
+};
+
+export type WebViewConfig = {
+  position?: string;
+  cornerRadius?: number;
+  respectsSafeArea?: boolean;
+  allowsOrientationChanges?: boolean;
+  backgroundStyle?: {
+    type?: string;
+    color?: string;
+    opacity?: number;
+  };
+};
+
+export type UserStatus = {
+  status: string;
+  vendors: Object;
+  purposes: Object;
+  tcf: string;
+  addtlConsent: string;
+  regulation: string;
+};
+
+export type GoogleConsentModeStatus = Object;
+
 export interface Spec extends TurboModule {
   // Configuration methods
-  setUrlConfig(config: {
-    id: string;
-    domain: string;
-    language: string;
-    appName: string;
-    noHash?: boolean;
-  }): Promise<void>;
+  setUrlConfig(config: UrlConfig): Promise<void>;
   
-  setWebViewConfig(config: {
-    position?: string;
-    cornerRadius?: number;
-    respectsSafeArea?: boolean;
-    allowsOrientationChanges?: boolean;
-  }): Promise<void>;
+  setWebViewConfig(config: WebViewConfig): Promise<void>;
 
   // iOS-only ATT status method
   setATTStatus(status: number): Promise<void>;
@@ -46,18 +67,11 @@ export interface Spec extends TurboModule {
   forceOpen(jumpToSettings: boolean): Promise<boolean>;
 
   // Consent status methods
-  getUserStatus(): Promise<{
-    status: string;
-    vendors: Object;
-    purposes: Object;
-    tcf: string;
-    addtlConsent: string;
-    regulation: string;
-  }>;
+  getUserStatus(): Promise<UserStatus>;
   
   getStatusForPurpose(purposeId: string): Promise<string>;
   getStatusForVendor(vendorId: string): Promise<string>;
-  getGoogleConsentModeStatus(): Promise<Object>;
+  getGoogleConsentModeStatus(): Promise<GoogleConsentModeStatus>;
   exportCMPInfo(): Promise<string>;
   importCMPInfo(cmpString: string): Promise<boolean>;
   resetConsentManagementData(): Promise<boolean>;
