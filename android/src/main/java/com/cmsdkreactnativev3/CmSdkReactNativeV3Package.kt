@@ -20,12 +20,12 @@ class CmSdkReactNativeV3Package : TurboReactPackage() {
     return ReactModuleInfoProvider {
       mapOf(
         CmSdkReactNativeV3Module.NAME to ReactModuleInfo(
-          _name = CmSdkReactNativeV3Module.NAME,
-          _className = CmSdkReactNativeV3Module.NAME,
-          _canOverrideExistingModule = false,
-          _needsEagerInit = false,
-          isCxxModule = false,
-          isTurboModule = true
+          CmSdkReactNativeV3Module.NAME,
+          CmSdkReactNativeV3Module.NAME,
+          false,
+          false,
+          false,
+          true
         )
       )
     }
