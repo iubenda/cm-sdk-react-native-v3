@@ -48,7 +48,7 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
   }
 
   override func supportedEvents() -> [String]! {
-    return ["didReceiveConsent", "didShowConsentLayer", "didCloseConsentLayer", "didReceiveError", "onClickLink"]
+    return ["didReceiveConsent", "didShowConsentLayer", "didCloseConsentLayer", "didReceiveError", "onClickLink", "didChangeATTStatus"]
   }
 
   override func startObserving() {
@@ -91,6 +91,7 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
   @objc public func didCloseConsentLayer() {
     if isConsentLayerShown {
       isConsentLayerShown = false
+      shouldHandleLinkClicks = false
       sendEventIfListening(name: "didCloseConsentLayer", body: nil)
     } else {
       print("CmSdkReactNativeV3: Ignoring didCloseConsentLayer - consent layer was not shown")
@@ -103,7 +104,7 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
 
   // MARK: - Configuration methods
 
-  @objc(setWebViewConfig:withResolver:withRejecter:)
+  @objc(setWebViewConfig:resolve:reject:)
   func setWebViewConfig(_ config: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       let uiConfig = ConsentLayerUIConfig(
         position: .fullScreen,
@@ -118,7 +119,7 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
       }
   }
 
-  @objc(setUrlConfig:withResolver:withRejecter:)
+  @objc(setUrlConfig:resolve:reject:)
   func setUrlConfig(_ config: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     runOnMainThread { [self] in
           do {
@@ -142,13 +143,13 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
 
   // MARK: - New methods
 
-  @objc(setATTStatus:withResolver:withRejecter:)
+  @objc(setATTStatus:resolve:reject:)
   func setATTStatus(_ status: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       cmpManager.setATTStatus(status.intValue)
       resolve(nil)
   }
 
-  @objc(getUserStatus:withRejecter:)
+  @objc(getUserStatus:reject:)
   func getUserStatus(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       do {
           let status = cmpManager.getUserStatus()
@@ -166,25 +167,25 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
       }
   }
 
-  @objc(getStatusForPurpose:withResolver:withRejecter:)
+  @objc(getStatusForPurpose:resolve:reject:)
   func getStatusForPurpose(_ purposeId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       let status = cmpManager.getStatusForPurpose(id: purposeId)
       resolve(status.rawValue)
   }
 
-  @objc(getStatusForVendor:withResolver:withRejecter:)
+  @objc(getStatusForVendor:resolve:reject:)
   func getStatusForVendor(_ vendorId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       let status = cmpManager.getStatusForVendor(id: vendorId)
       resolve(status.rawValue)
   }
 
-  @objc(getGoogleConsentModeStatus:withRejecter:)
+  @objc(getGoogleConsentModeStatus:reject:)
   func getGoogleConsentModeStatus(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       let status = cmpManager.getGoogleConsentModeStatus()
       resolve(status)
   }
 
-  @objc(checkAndOpen:withResolver:withRejecter:)
+  @objc(checkAndOpen:resolve:reject:)
   func checkAndOpen(_ jumpToSettings: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       cmpManager.checkAndOpen(jumpToSettings: jumpToSettings) { error in
           if let error = error {
@@ -195,7 +196,7 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
       }
   }
 
-  @objc(forceOpen:withResolver:withRejecter:)
+  @objc(forceOpen:resolve:reject:)
   func forceOpen(_ jumpToSettings: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       cmpManager.forceOpen(jumpToSettings: jumpToSettings) { error in
           if let error = error {
@@ -206,41 +207,41 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
       }
   }
 
-  @objc(exportCMPInfo:withRejecter:)
+  @objc(exportCMPInfo:reject:)
   func exportCMPInfo(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       let info = self.cmpManager.exportCMPInfo()
       resolve(info)
   }
 
-  @objc(acceptVendors:withResolver:withRejecter:)
+  @objc(acceptVendors:resolve:reject:)
   func acceptVendors(_ vendors: [String], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       self.cmpManager.acceptVendors(vendors) { success in
           resolve(success)
           }
   }
 
-  @objc(rejectVendors:withResolver:withRejecter:)
+  @objc(rejectVendors:resolve:reject:)
   func rejectVendors(_ vendors: [String], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       self.cmpManager.rejectVendors(vendors) { success in
           resolve(success)
       }
   }
 
-  @objc(acceptPurposes:updatePurpose:withResolver:withRejecter:)
+  @objc(acceptPurposes:updatePurpose:resolve:reject:)
   func acceptPurposes(_ purposes: [String], updatePurpose: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       self.cmpManager.acceptPurposes(purposes, updatePurpose: updatePurpose) { success in
           resolve(success)
       }
   }
 
-  @objc(rejectPurposes:updateVendor:withResolver:withRejecter:)
+  @objc(rejectPurposes:updateVendor:resolve:reject:)
   func rejectPurposes(_ purposes: [String], updateVendor: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       self.cmpManager.rejectPurposes(purposes, updateVendor: updateVendor) { success in
           resolve(success)
       }
   }
 
-  @objc(rejectAll:withRejecter:)
+  @objc(rejectAll:reject:)
   func rejectAll(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     self.cmpManager.rejectAll { error in
        if let error = error {
@@ -251,7 +252,7 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
      }
   }
 
-  @objc(acceptAll:withRejecter:)
+  @objc(acceptAll:reject:)
   func acceptAll(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     self.cmpManager.acceptAll { error in
       if let error = error {
@@ -262,7 +263,7 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
     }
   }
 
-  @objc(importCMPInfo:withResolver:withRejecter:)
+  @objc(importCMPInfo:resolve:reject:)
   func importCMPInfo(_ cmpString: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       self.cmpManager.importCMPInfo(cmpString) { error in
          if let error = error {
@@ -273,17 +274,20 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
      }
   }
 
-  @objc(resetConsentManagementData:withRejecter:)
+  @objc(resetConsentManagementData:reject:)
   func resetConsentManagementData(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       self.cmpManager.resetConsentManagementData(completion: { success in resolve(success)})
-      resolve(nil)
+  }
+
+  // MARK: - Event emitter methods (required for TurboModule)
+  
+  @objc(addListener:)
+  override func addListener(_ eventName: String) {
+    super.addListener(eventName)
+  }
+  
+  @objc(removeListeners:)
+  override func removeListeners(_ count: Double) {
+    super.removeListeners(Double(Int(count)))
   }
 }
-
-#if RCT_NEW_ARCH_ENABLED
-import CmSdkReactNativeV3Spec
-
-extension CmSdkReactNativeV3: NativeCmSdkReactNativeV3Spec {
-  // Protocol is automatically satisfied by @objc methods above
-}
-#endif

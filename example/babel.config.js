@@ -12,8 +12,8 @@ module.exports = function (api) {
         {
           extensions: ['.tsx', '.ts', '.js', '.json'],
           alias: {
-            // Resolve the library to the source code for development
-            [pak.name]: path.join(__dirname, '..', pak.source),
+            // Point to the built files instead of source to avoid TurboModuleRegistry issues
+            [pak.name]: path.join(__dirname, '..', 'lib', 'module'),
           },
         },
       ],

@@ -1,80 +1,85 @@
 #import <React/RCTBridgeModule.h>
 #import <React/RCTEventEmitter.h>
 
+#ifdef RCT_NEW_ARCH_ENABLED
+#import <CmSdkReactNativeV3Spec/CmSdkReactNativeV3Spec.h>
+#endif
+
+// Use RCT_EXTERN_MODULE for both architectures when using Swift
 @interface RCT_EXTERN_MODULE(CmSdkReactNativeV3, RCTEventEmitter)
 
 // Core methods
 RCT_EXTERN_METHOD(setUrlConfig:(NSDictionary *)config
-        withResolver:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(setWebViewConfig:(NSDictionary *)config
-        withResolver:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(setATTStatus:(NSInteger)status
-        withResolver:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
 
-// New methods
+// Main methods
 RCT_EXTERN_METHOD(checkAndOpen:(BOOL)jumpToSettings
-        withResolver:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(forceOpen:(BOOL)jumpToSettings
-        withResolver:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(getUserStatus:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(getStatusForPurpose:(NSString *)purposeId
-        withResolver:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(getStatusForVendor:(NSString *)vendorId
-        withResolver:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(getGoogleConsentModeStatus:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(exportCMPInfo:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        reject:(RCTPromiseRejectBlock)reject)
 
 // Consent modification methods
 RCT_EXTERN_METHOD(acceptVendors:(NSArray *)vendors
-        withResolver:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(rejectVendors:(NSArray *)vendors
-        withResolver:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(acceptPurposes:(NSArray *)purposes
         updatePurpose:(BOOL)updatePurpose
-        withResolver:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(rejectPurposes:(NSArray *)purposes
         updateVendor:(BOOL)updateVendor
-        withResolver:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(rejectAll:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(acceptAll:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(importCMPInfo:(NSString *)cmpString
-        withResolver:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(resetConsentManagementData:(RCTPromiseResolveBlock)resolve
-        withRejecter:(RCTPromiseRejectBlock)reject)
+        reject:(RCTPromiseRejectBlock)reject)
 
-// Event emitter support methods (required for TurboModule)
+// Event emitter support methods
 RCT_EXTERN_METHOD(addListener:(NSString *)eventName)
 RCT_EXTERN_METHOD(removeListeners:(double)count)
 

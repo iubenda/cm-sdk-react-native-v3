@@ -1,5 +1,6 @@
 ENV['RCT_NEW_ARCH_ENABLED'] = '1'
 ENV['RCT_BRIDGELESS_ENABLED'] = '1'  # RN 0.74+
+ENV['USE_HERMES'] = '1'
 
 ws_dir = Pathname.new(__dir__)
 ws_dir = ws_dir.parent until
