@@ -28,6 +28,8 @@ const CmSdkReactNativeV3 = NativeCmSdkReactNativeV3 ?? (NativeModules.CmSdkReact
       }
     ));
 
+export const isTurboModuleEnabled = NativeCmSdkReactNativeV3 != null;
+
 const eventEmitter = new NativeEventEmitter(CmSdkReactNativeV3);
 
 export const addConsentListener = (
@@ -136,6 +138,27 @@ export const rejectAll = (): Promise<boolean> => {
 
 export const acceptAll = (): Promise<boolean> => {
   return CmSdkReactNativeV3.acceptAll();
+};
+
+// Helper function to check if New Architecture is enabled
+export const isNewArchitectureEnabled = (): boolean => {
+  // Check multiple indicators for New Architecture
+  // 1. Check if our module was loaded via TurboModuleRegistry
+  if (NativeCmSdkReactNativeV3 != null) {
+    return true;
+  }
+
+  // 2. Check for bridgeless mode (official RN flag)
+  if ((global as any).RN$Bridgeless === true) {
+    return true;
+  }
+
+  // 3. Check for TurboModule interop flag
+  if ((global as any).RN$TurboInterop === true) {
+    return true;
+  }
+
+  return false;
 };
 
 // Re-export types for consumer convenience

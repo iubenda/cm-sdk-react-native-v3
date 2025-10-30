@@ -18,10 +18,9 @@ import CmSdkReactNativeV3, {
   addCloseConsentLayerListener,
   addErrorListener,
   addClickLinkListener,
+  isNewArchitectureEnabled,
+  isTurboModuleEnabled,
 } from 'cm-sdk-react-native-v3';
-
-// Detect architecture by checking if TurboModule registry is available
-const isTurboModuleEnabled = (global as any).__turboModuleProxy != null;
 
 const HomeScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -138,10 +137,13 @@ const HomeScreen: React.FC = () => {
 
   const detectArchitecture = () => {
     try {
-      if (isTurboModuleEnabled) {
+      const isNewArch = isNewArchitectureEnabled();
+      const hasTurboModule = isTurboModuleEnabled;
+      
+      if (isNewArch || hasTurboModule) {
         setArchitectureInfo({
           type: 'New Architecture',
-          details: `TurboModule detected on ${Platform.OS}. Enhanced performance and type safety enabled.`
+          details: `TurboModule detected on ${Platform.OS}. Enhanced performance and type safety enabled. (TurboModule: ${hasTurboModule}, NewArch: ${isNewArch})`
         });
         setEventLog(prev => [...prev, '🚀 New Architecture (TurboModule) detected!']);
       } else {
