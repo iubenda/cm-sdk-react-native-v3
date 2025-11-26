@@ -18,6 +18,9 @@ import CmSdkReactNativeV3, {
   addCloseConsentLayerListener,
   addErrorListener,
   addClickLinkListener,
+  BackgroundStyle,
+  BlurEffectStyle,
+  ATTStatus,
   WebViewPosition,
   type WebViewConfig,
 } from 'cm-sdk-react-native-v3';
@@ -134,7 +137,7 @@ const HomeScreen: React.FC = () => {
     try {
       const webViewConfig: WebViewConfig = {
         position: WebViewPosition.HalfScreenBottom,
-        backgroundStyle: { type: 'dimmed', color: 'blue', opacity: 0.8 },
+        backgroundStyle: BackgroundStyle.blur(BlurEffectStyle.Dark),
         cornerRadius: 25,
         respectsSafeArea: true,
         allowsOrientationChanges: true,
@@ -152,9 +155,8 @@ const HomeScreen: React.FC = () => {
 
       // iOS-only: Set ATT status if on iOS
       if (Platform.OS === 'ios') {
-        // ATT status values: 0=notDetermined, 1=restricted, 2=denied, 3=authorized
-        // You would get this from AppTrackingTransparency framework
-        await CmSdkReactNativeV3.setATTStatus(0);
+        // ATT status comes from AppTrackingTransparency (0–3). Use enum for clarity.
+        await CmSdkReactNativeV3.setATTStatus(ATTStatus.NotDetermined);
       }
 
       await CmSdkReactNativeV3.checkAndOpen(false);

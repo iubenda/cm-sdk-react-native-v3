@@ -43,11 +43,31 @@ export type WebViewRect = {
   height: number;
 };
 
+export enum BackgroundStyleType {
+  Dimmed = 'dimmed',
+  Color = 'color',
+  Blur = 'blur',
+  None = 'none',
+}
+
+export enum BlurEffectStyle {
+  Light = 'light',
+  Dark = 'dark',
+  ExtraLight = 'extraLight',
+}
+
+export enum ATTStatus {
+  NotDetermined = 0,
+  Restricted = 1,
+  Denied = 2,
+  Authorized = 3,
+}
+
 export type WebViewBackgroundStyle =
-  | { type: 'dimmed'; color?: string | number; opacity?: number }
-  | { type: 'color'; color: string | number }
-  | { type: 'blur'; blurEffectStyle?: 'light' | 'dark' | 'extraLight' }
-  | { type: 'none' };
+  | { type: BackgroundStyleType.Dimmed; color?: string | number; opacity?: number }
+  | { type: BackgroundStyleType.Color; color: string | number }
+  | { type: BackgroundStyleType.Blur; blurEffectStyle?: BlurEffectStyle }
+  | { type: BackgroundStyleType.None };
 
 export type WebViewConfig = {
   position?: WebViewPosition;
@@ -76,7 +96,7 @@ export interface CmSdkReactNativeV3Module {
   setWebViewConfig(config: WebViewConfig): Promise<void>;
 
   // iOS-only ATT status method
-  setATTStatus(status: number): Promise<void>;
+  setATTStatus(status: ATTStatus | number): Promise<void>;
 
   // Main interaction methods
   checkAndOpen(jumpToSettings: boolean): Promise<boolean>;

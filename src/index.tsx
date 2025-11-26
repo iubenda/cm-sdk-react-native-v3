@@ -9,13 +9,16 @@ import NativeCmSdkReactNativeV3, {
   type WebViewRect,
   type WebViewBackgroundStyle,
   WebViewPosition,
+  BackgroundStyleType,
+  BlurEffectStyle,
+  ATTStatus,
   type UserStatus,
   type GoogleConsentModeStatus,
   type CmSdkReactNativeV3Module,
 } from './NativeCmSdkReactNativeV3';
 
 // Re-export enums/constants for consumers
-export { WebViewPosition };
+export { WebViewPosition, BackgroundStyleType, BlurEffectStyle, ATTStatus };
 
 const LINKING_ERROR =
   `The package 'react-native-cm-sdk-react-native-v3' doesn't seem to be linked. Make sure: \n\n` +
@@ -79,7 +82,18 @@ export const setWebViewConfig = (config: WebViewConfig): Promise<void> => {
   return CmSdkReactNativeV3.setWebViewConfig(normalized);
 };
 
-export const setATTStatus = (status: number): Promise<void> => {
+export const setATTStatus = (status: ATTStatus | number): Promise<void> => {
+  const allowed = new Set<ATTStatus>([
+    ATTStatus.NotDetermined,
+    ATTStatus.Restricted,
+    ATTStatus.Denied,
+    ATTStatus.Authorized,
+  ]);
+  if (!allowed.has(status as ATTStatus)) {
+    throw new Error(
+      `[cm-sdk-react-native-v3] Invalid ATT status ${status}. Use ATTStatus enum (0–3 from Apple's ATTrackingManagerAuthorizationStatus).`
+    );
+  }
   return CmSdkReactNativeV3.setATTStatus(status);
 };
 
@@ -110,33 +124,65 @@ const normalizeWebViewConfig = (config: WebViewConfig): WebViewConfig => {
     throw new Error(`Invalid WebView position: ${position}`);
   }
 
-  if (position === WebViewPosition.Custom && !config.customRect) {
-    throw new Error('customRect is required when position is "custom"');
+  if (position === WebViewPosition.Custom) {
+    if (!config.customRect) {
+      throw new Error('customRect is required when position is "custom"');
+    }
+    if (Platform.OS === 'android') {
+      console.warn(
+        '[cm-sdk-react-native-v3] Android native SDK currently ignores customRect/position "custom"; it will fall back to full screen.'
+      );
+    }
   }
 
   const backgroundStyle = (() => {
     if (!config.backgroundStyle) {
-      return { type: 'dimmed', color: normalizeColor('black'), opacity: 0.5 } as WebViewBackgroundStyle;
+      return {
+        type: BackgroundStyleType.Dimmed,
+        color: normalizeColor('black'),
+        opacity: 0.5,
+      } as WebViewBackgroundStyle;
     }
     const { type } = config.backgroundStyle;
     switch (type) {
-    case 'dimmed':
-      return {
-        type,
-        color: normalizeColor(config.backgroundStyle.color ?? 'black'),
-        opacity: config.backgroundStyle.opacity ?? 0.5,
-      } as WebViewBackgroundStyle;
-    case 'color':
+      case BackgroundStyleType.Dimmed:
+        return {
+          type,
+          color: normalizeColor(config.backgroundStyle.color ?? 'black'),
+          opacity: config.backgroundStyle.opacity ?? 0.5,
+        } as WebViewBackgroundStyle;
+      case BackgroundStyleType.Color:
         if (!config.backgroundStyle.color) throw new Error('color is required for backgroundStyle "color"');
         return { type, color: normalizeColor(config.backgroundStyle.color) } as WebViewBackgroundStyle;
-    case 'blur':
-      return { type, blurEffectStyle: config.backgroundStyle.blurEffectStyle ?? 'dark' } as WebViewBackgroundStyle;
-    case 'none':
-      return { type } as WebViewBackgroundStyle;
-    default:
-      throw new Error(`Invalid backgroundStyle type: ${(config.backgroundStyle as any).type}`);
+      case BackgroundStyleType.Blur: {
+        const blurStyle =
+          config.backgroundStyle.blurEffectStyle ?? (Platform.OS === 'ios'
+            ? BlurEffectStyle.Dark
+            : BlurEffectStyle.Dark);
+        if (
+          blurStyle !== BlurEffectStyle.Dark &&
+          blurStyle !== BlurEffectStyle.Light &&
+          blurStyle !== BlurEffectStyle.ExtraLight
+        ) {
+          throw new Error(`Invalid blurEffectStyle: ${blurStyle}`);
+        }
+        if (Platform.OS === 'android') {
+          console.warn('[cm-sdk-react-native-v3] Android native SDK currently ignores blur backgrounds; using dimmed.');
+        }
+        return { type, blurEffectStyle: blurStyle } as WebViewBackgroundStyle;
+      }
+      case BackgroundStyleType.None:
+        return { type } as WebViewBackgroundStyle;
+      default:
+        throw new Error(`Invalid backgroundStyle type: ${(config.backgroundStyle as any).type}`);
     }
   })();
+
+  if (Platform.OS === 'android' && config.backgroundStyle) {
+    console.warn(
+      '[cm-sdk-react-native-v3] Android native SDK currently ignores backgroundStyle overrides; it always uses a dimmed background.'
+    );
+  }
 
   return {
     position,
@@ -217,5 +263,25 @@ export type {
   UserStatus,
   GoogleConsentModeStatus,
 };
+
+/**
+ * Helper factory to build strongly-typed background styles.
+ */
+export const BackgroundStyle = {
+  dimmed: (color?: string | number, opacity?: number): WebViewBackgroundStyle => ({
+    type: BackgroundStyleType.Dimmed,
+    color,
+    opacity,
+  }),
+  color: (color: string | number): WebViewBackgroundStyle => ({
+    type: BackgroundStyleType.Color,
+    color,
+  }),
+  blur: (blurEffectStyle: BlurEffectStyle = BlurEffectStyle.Dark): WebViewBackgroundStyle => ({
+    type: BackgroundStyleType.Blur,
+    blurEffectStyle,
+  }),
+  none: (): WebViewBackgroundStyle => ({ type: BackgroundStyleType.None }),
+} as const;
 
 export default CmSdkReactNativeV3;

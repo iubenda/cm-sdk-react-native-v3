@@ -240,9 +240,10 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
                     let appName = config["appName"] as? String else {
                   throw NSError(domain: "CmSdkReactNativeV3", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid config parameters"])
               }
+              let noHash = config["noHash"] as? Bool ?? false
               print("ID: \(id) - Domain: \(domain)")
 
-              let urlConfig = UrlConfig(id: id, domain: domain, language: language, appName: appName)
+              let urlConfig = UrlConfig(id: id, domain: domain, language: language, appName: appName, jsonConfig: nil, noHash: noHash)
               print("urlConfig = \(urlConfig)")
               self.cmpManager.setUrlConfig(urlConfig)
               resolve(nil)
