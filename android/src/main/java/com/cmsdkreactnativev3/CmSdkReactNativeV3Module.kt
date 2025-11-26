@@ -3,7 +3,7 @@ package com.cmsdkreactnativev3
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.facebook.fbreact.specs.NativeCmSdkReactNativeV3Spec
+import android.app.Activity
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.Promise
@@ -14,6 +14,8 @@ import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
+import com.facebook.react.bridge.ReactContextBaseJavaModule
+import com.facebook.react.modules.core.DeviceEventManagerModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,7 +27,7 @@ import net.consentmanager.cm_sdk_android_v3.UrlConfig
 import net.consentmanager.cm_sdk_android_v3.UserConsentStatus
 
 class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
-  NativeCmSdkReactNativeV3Spec(reactContext), LifecycleEventListener, CMPManagerDelegate {
+  ReactContextBaseJavaModule(reactContext), LifecycleEventListener, CMPManagerDelegate {
 
   private lateinit var cmpManager: CMPManager
   private val scope = CoroutineScope(Dispatchers.Main)
@@ -34,6 +36,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   private val uiThreadHandler = Handler(Looper.getMainLooper())
   private var isInitialized = false
   private var storedATTStatus: Int = 0
+  private var isWebViewConfigSet = false
 
 
   init {
@@ -42,7 +45,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
     webViewConfig = ConsentLayerUIConfig(
       position = ConsentLayerUIConfig.Position.FULL_SCREEN,
       backgroundStyle = ConsentLayerUIConfig.BackgroundStyle.dimmed(android.graphics.Color.BLACK, 0.5f),
-      cornerRadius = 0f,
+      cornerRadius = dpToPx(5f),
       respectsSafeArea = true,
       isCancelable = false,
       allowsOrientationChanges = true
@@ -62,13 +65,16 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
     uiThreadHandler.post(runnable)
   }
 
+  private val currentActivitySafe: Activity?
+    get() = reactApplicationContext.currentActivity
+
   @ReactMethod
-  override fun addListener(eventName: String?) {
+  fun addListener(eventName: String?) {
     // Required for NativeEventEmitter - React Native calls this automatically
   }
 
   @ReactMethod
-  override fun removeListeners(count: Double) {
+  fun removeListeners(count: Double) {
     // Required for NativeEventEmitter - React Native calls this automatically
   }
 
@@ -77,7 +83,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
 
 
   @ReactMethod
-  override fun setATTStatus(status: Double, promise: Promise) {
+  fun setATTStatus(status: Double, promise: Promise) {
     try {
       this.storedATTStatus = status.toInt()
       promise.resolve(null)
@@ -87,34 +93,42 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun setWebViewConfig(config: ReadableMap, promise: Promise) {
-    runOnUiThread {
-      try {
-        val position = when (config.getString("position")) {
-          "fullScreen" -> ConsentLayerUIConfig.Position.FULL_SCREEN
-          "halfScreenBottom" -> ConsentLayerUIConfig.Position.HALF_SCREEN_BOTTOM
-          "halfScreenTop" -> ConsentLayerUIConfig.Position.HALF_SCREEN_TOP
-          else -> ConsentLayerUIConfig.Position.FULL_SCREEN
-        }
-
-        this.webViewConfig = ConsentLayerUIConfig(
-          position = position,
-          backgroundStyle = ConsentLayerUIConfig.BackgroundStyle.dimmed(android.graphics.Color.BLACK, 0.5f),
-          cornerRadius = (config.getDouble("cornerRadius") ?: 0.0).toFloat(),
-          respectsSafeArea = config.getBoolean("respectsSafeArea"),
-          isCancelable = false,
-          allowsOrientationChanges = config.getBoolean("allowsOrientationChanges")
-        )
-
+  fun setWebViewConfig(config: ReadableMap, promise: Promise) {
+    try {
+      if (::cmpManager.isInitialized && isInitialized) {
+        Log.w("CmSdkReactNativeV3", "setWebViewConfig called after CMPManager initialization. Config changes will not be applied. Set config before setUrlConfig.")
         promise.resolve(null)
-      } catch (e: Exception) {
-        promise.reject("ERROR", "Failed to set WebView config: ${e.message}")
+        return
       }
+
+      val position = when (config.getString("position")) {
+        "fullScreen" -> ConsentLayerUIConfig.Position.FULL_SCREEN
+        "halfScreenBottom" -> ConsentLayerUIConfig.Position.HALF_SCREEN_BOTTOM
+        "halfScreenTop" -> ConsentLayerUIConfig.Position.HALF_SCREEN_TOP
+        else -> ConsentLayerUIConfig.Position.FULL_SCREEN
+      }
+
+      val cornerRadiusDp = if (config.hasKey("cornerRadius")) config.getDouble("cornerRadius").toFloat() else 0f
+      val cornerRadius = dpToPx(cornerRadiusDp)
+
+      this.webViewConfig = ConsentLayerUIConfig(
+        position = position,
+        backgroundStyle = ConsentLayerUIConfig.BackgroundStyle.dimmed(android.graphics.Color.BLACK, 0.5f),
+        cornerRadius = cornerRadius,
+        respectsSafeArea = if (config.hasKey("respectsSafeArea")) config.getBoolean("respectsSafeArea") else true,
+        isCancelable = false,
+        allowsOrientationChanges = if (config.hasKey("allowsOrientationChanges")) config.getBoolean("allowsOrientationChanges") else true
+      )
+      isWebViewConfigSet = true
+
+      promise.resolve(null)
+    } catch (e: Exception) {
+      promise.reject("ERROR", "Failed to set WebView config: ${e.message}")
     }
   }
 
   @ReactMethod
-  override fun setUrlConfig(config: ReadableMap, promise: Promise) {
+  fun setUrlConfig(config: ReadableMap, promise: Promise) {
     runOnUiThread {
       try {
         val id = config.getString("id") ?: throw IllegalArgumentException("Missing 'id'")
@@ -124,8 +138,10 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
         val noHash = if (config.hasKey("noHash")) config.getBoolean("noHash") else false
 
         this.urlConfig = UrlConfig(id, domain, language, appName, noHash = noHash)
-
-        initializeCMPManager()
+        // Ensure we initialize manager only once and with whatever webViewConfig is currently set
+        if (!::cmpManager.isInitialized) {
+          initializeCMPManager()
+        }
 
         promise.resolve(null)
       } catch (e: Exception) {
@@ -135,7 +151,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   }
 
   private fun initializeCMPManager() {
-    val activity = currentActivity ?: throw IllegalStateException("Current activity is null")
+    val activity = currentActivitySafe ?: throw IllegalStateException("Current activity is null")
     Log.d("CmSdkReactNativeV3", "Initializing CMPManager with activity: $activity, delegate: $this")
 
     cmpManager = CMPManager.getInstance(
@@ -144,6 +160,10 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
       webViewConfig,
       this
     )
+    configureCmpManager(activity)
+  }
+
+  private fun configureCmpManager(activity: Activity) {
     cmpManager.setActivity(activity)
 
     cmpManager.setOnClickLinkCallback { url ->
@@ -166,14 +186,14 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
     }
     isInitialized = true
 
-    Log.d("CmSdkReactNativeV3", "CMPManager initialized with fresh delegate registration")
+    Log.d("CmSdkReactNativeV3", "CMPManager initialized/reconfigured with current configs")
   }
 
   /**
    * Gets the comprehensive user consent status
    */
   @ReactMethod
-  override fun getUserStatus(promise: Promise) {
+  fun getUserStatus(promise: Promise) {
     try {
       val userStatus = cmpManager.getUserStatus()
       val result = Arguments.createMap().apply {
@@ -201,11 +221,16 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
     }
   }
 
+  private fun dpToPx(dp: Float): Float {
+    val metrics = reactApplicationContext.resources.displayMetrics
+    return android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_DIP, dp, metrics)
+  }
+
   /**
    * Gets the consent status for a specific purpose
    */
   @ReactMethod
-  override fun getStatusForPurpose(purposeId: String, promise: Promise) {
+  fun getStatusForPurpose(purposeId: String, promise: Promise) {
     try {
       val status = cmpManager.getStatusForPurpose(purposeId)
       promise.resolve(status.toString())
@@ -218,7 +243,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
    * Gets the consent status for a specific vendor
    */
   @ReactMethod
-  override fun getStatusForVendor(vendorId: String, promise: Promise) {
+  fun getStatusForVendor(vendorId: String, promise: Promise) {
     try {
       val status = cmpManager.getStatusForVendor(vendorId)
       promise.resolve(status.toString())
@@ -231,7 +256,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
    * Gets Google Consent Mode v2 compatible settings
    */
   @ReactMethod
-  override fun getGoogleConsentModeStatus(promise: Promise) {
+  fun getGoogleConsentModeStatus(promise: Promise) {
     try {
       val consentModeStatus = cmpManager.getGoogleConsentModeStatus()
       val result = Arguments.createMap()
@@ -250,10 +275,10 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
    * Replacement for openConsentLayer - force opens the consent UI
    */
   @ReactMethod
-  override fun forceOpen(jumpToSettings: Boolean, promise: Promise) {
+  fun forceOpen(jumpToSettings: Boolean, promise: Promise) {
     scope.launch {
       try {
-        currentActivity?.let { cmpManager.setActivity(it) }
+        currentActivitySafe?.let { cmpManager.setActivity(it) }
 
         cmpManager.forceOpen(jumpToSettings) { result ->
           if (result.isSuccess) {
@@ -272,10 +297,10 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
    * Replacement for checkWithServerAndOpenIfNecessary - checks with server and opens if needed
    */
   @ReactMethod
-  override fun checkAndOpen(jumpToSettings: Boolean, promise: Promise) {
+  fun checkAndOpen(jumpToSettings: Boolean, promise: Promise) {
     scope.launch {
       try {
-        currentActivity?.let { cmpManager.setActivity(it) }
+        currentActivitySafe?.let { cmpManager.setActivity(it) }
 
         cmpManager.checkAndOpen(jumpToSettings) { result ->
           if (result.isSuccess) {
@@ -294,7 +319,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
    * Import a CMP information string
    */
   @ReactMethod
-  override fun importCMPInfo(cmpString: String, promise: Promise) {
+  fun importCMPInfo(cmpString: String, promise: Promise) {
     scope.launch {
       try {
         cmpManager.importCMPInfo(cmpString) { result ->
@@ -314,7 +339,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
    * Reset all consent management data
    */
   @ReactMethod
-  override fun resetConsentManagementData(promise: Promise) {
+  fun resetConsentManagementData(promise: Promise) {
     try {
       cmpManager.resetConsentManagementData()
       promise.resolve(true)
@@ -324,12 +349,12 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun exportCMPInfo(promise: Promise) {
+  fun exportCMPInfo(promise: Promise) {
     promise.resolve(cmpManager.exportCMPInfo())
   }
 
   @ReactMethod
-  override fun acceptVendors(vendors: ReadableArray, promise: Promise) {
+  fun acceptVendors(vendors: ReadableArray, promise: Promise) {
     scope.launch {
       try {
         Log.d("CmSdkReactNativeV3", "Accepting vendors: $vendors")
@@ -348,7 +373,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun rejectVendors(vendors: ReadableArray, promise: Promise) {
+  fun rejectVendors(vendors: ReadableArray, promise: Promise) {
     scope.launch {
       try {
         Log.d("CmSdkReactNativeV3", "Rejecting vendors: $vendors")
@@ -366,7 +391,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun acceptPurposes(purposes: ReadableArray, updatePurpose: Boolean, promise: Promise) {
+  fun acceptPurposes(purposes: ReadableArray, updatePurpose: Boolean, promise: Promise) {
     scope.launch {
       try {
         Log.d("Cmsdkreactnativev3", "Rejecting purposes: $purposes")
@@ -385,7 +410,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun rejectPurposes(purposes: ReadableArray, updateVendor: Boolean, promise: Promise) {
+  fun rejectPurposes(purposes: ReadableArray, updateVendor: Boolean, promise: Promise) {
     scope.launch {
       try {
         Log.d("Cmsdkreactnativev3", "Rejecting purposes: $purposes")
@@ -403,7 +428,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun rejectAll(promise: Promise) {
+  fun rejectAll(promise: Promise) {
     scope.launch {
       try {
         cmpManager.rejectAll { result ->
@@ -420,7 +445,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun acceptAll(promise: Promise) {
+  fun acceptAll(promise: Promise) {
     scope.launch {
       try {
         cmpManager.acceptAll { result ->
@@ -451,7 +476,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   override fun onHostResume() {
     if (::cmpManager.isInitialized) {
       cmpManager.onApplicationResume()
-      currentActivity?.let { cmpManager.setActivity(it) }
+      currentActivitySafe?.let { cmpManager.setActivity(it) }
     }
   }
 
@@ -469,8 +494,9 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
 
   private fun sendEvent(eventName: String, params: WritableMap?) {
     Log.d("CmSdkReactNativeV3", "sendEvent called: $eventName")
-    // Bridgeless-compatible: emitDeviceEvent works in all modes (legacy, new arch, bridgeless)
-    reactApplicationContext.emitDeviceEvent(eventName, params)
+    reactApplicationContext
+      .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+      .emit(eventName, params)
   }
 
   private fun List<String>.toWritableArray(): WritableArray {

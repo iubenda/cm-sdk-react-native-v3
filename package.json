@@ -1,6 +1,6 @@
 {
   "name": "cm-sdk-react-native-v3",
-  "version": "3.6.1",
+  "version": "3.6.2",
   "description": "Consent Management React Native Library by consentmanager.net",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
@@ -69,6 +69,7 @@
     "del-cli": "^5.1.0",
     "eslint": "^8.51.0",
     "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.5.4",
     "jest": "^29.7.0",
     "prettier": "^3.0.3",
     "react": "18.3.1",
@@ -176,10 +177,5 @@
     "type": "module-legacy",
     "languages": "kotlin-swift",
     "version": "0.41.2"
-  },
-  "codegenConfig": {
-    "name": "CmSdkReactNativeV3Spec",
-    "type": "modules",
-    "jsSrcsDir": "src"
   }
 }
