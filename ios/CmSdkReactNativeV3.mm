@@ -1,11 +1,7 @@
 #import <React/RCTBridgeModule.h>
 #import <React/RCTEventEmitter.h>
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#import <CmSdkReactNativeV3Spec/CmSdkReactNativeV3Spec.h>
-#endif
-
-// Use RCT_EXTERN_MODULE for both architectures when using Swift
+// Swift method declarations - bridges Swift methods to Objective-C
 @interface RCT_EXTERN_MODULE(CmSdkReactNativeV3, RCTEventEmitter)
 
 // Core methods

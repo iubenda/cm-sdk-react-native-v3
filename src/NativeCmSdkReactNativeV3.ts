@@ -1,5 +1,4 @@
-import type { TurboModule } from 'react-native';
-import { TurboModuleRegistry } from 'react-native';
+import { NativeModules } from 'react-native';
 
 // Event payload types for better TypeScript support
 export type ConsentReceivedEvent = {
@@ -30,16 +29,33 @@ export type UrlConfig = {
   noHash?: boolean;
 };
 
+export enum WebViewPosition {
+  FullScreen = 'fullScreen',
+  HalfScreenTop = 'halfScreenTop',
+  HalfScreenBottom = 'halfScreenBottom',
+  Custom = 'custom',
+}
+
+export type WebViewRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type WebViewBackgroundStyle =
+  | { type: 'dimmed'; color?: string | number; opacity?: number }
+  | { type: 'color'; color: string | number }
+  | { type: 'blur'; blurEffectStyle?: 'light' | 'dark' | 'extraLight' }
+  | { type: 'none' };
+
 export type WebViewConfig = {
-  position?: string;
+  position?: WebViewPosition;
+  customRect?: WebViewRect;
   cornerRadius?: number;
   respectsSafeArea?: boolean;
   allowsOrientationChanges?: boolean;
-  backgroundStyle?: {
-    type?: string;
-    color?: string;
-    opacity?: number;
-  };
+  backgroundStyle?: WebViewBackgroundStyle;
 };
 
 export type UserStatus = {
@@ -53,10 +69,10 @@ export type UserStatus = {
 
 export type GoogleConsentModeStatus = Object;
 
-export interface Spec extends TurboModule {
+export interface CmSdkReactNativeV3Module {
   // Configuration methods
   setUrlConfig(config: UrlConfig): Promise<void>;
-  
+
   setWebViewConfig(config: WebViewConfig): Promise<void>;
 
   // iOS-only ATT status method
@@ -84,9 +100,11 @@ export interface Spec extends TurboModule {
   rejectAll(): Promise<boolean>;
   acceptAll(): Promise<boolean>;
 
-  // Event emitter methods (required for TurboModule)
+  // Event emitter methods used by NativeEventEmitter
   addListener(eventName: string): void;
   removeListeners(count: number): void;
 }
 
-export default TurboModuleRegistry.getEnforcing<Spec>('CmSdkReactNativeV3');
+const { CmSdkReactNativeV3 } = NativeModules;
+
+export default CmSdkReactNativeV3 as CmSdkReactNativeV3Module;

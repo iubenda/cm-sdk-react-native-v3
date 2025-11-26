@@ -18,18 +18,14 @@ import CmSdkReactNativeV3, {
   addCloseConsentLayerListener,
   addErrorListener,
   addClickLinkListener,
-  isNewArchitectureEnabled,
-  isTurboModuleEnabled,
+  WebViewPosition,
+  type WebViewConfig,
 } from 'cm-sdk-react-native-v3';
 
 const HomeScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [eventLog, setEventLog] = useState<string[]>([]);
-  const [architectureInfo, setArchitectureInfo] = useState<{
-    type: 'Legacy' | 'New Architecture';
-    details: string;
-  }>({ type: 'Legacy', details: 'Detecting...' });
   const [performanceMetrics, setPerformanceMetrics] = useState<{
     [key: string]: number;
   }>({});
@@ -131,39 +127,21 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    detectArchitecture();
     initializeConsent();
   }, []);
 
-  const detectArchitecture = () => {
-    try {
-      const isNewArch = isNewArchitectureEnabled();
-      const hasTurboModule = isTurboModuleEnabled;
-      
-      if (isNewArch || hasTurboModule) {
-        setArchitectureInfo({
-          type: 'New Architecture',
-          details: `TurboModule detected on ${Platform.OS}. Enhanced performance and type safety enabled. (TurboModule: ${hasTurboModule}, NewArch: ${isNewArch})`
-        });
-        setEventLog(prev => [...prev, '🚀 New Architecture (TurboModule) detected!']);
-      } else {
-        setArchitectureInfo({
-          type: 'Legacy',
-          details: `Legacy Bridge detected on ${Platform.OS}. Using traditional NativeModules.`
-        });
-        setEventLog(prev => [...prev, '📱 Legacy Architecture detected']);
-      }
-    } catch (error) {
-      setArchitectureInfo({
-        type: 'Legacy',
-        details: `Architecture detection failed: ${error}. Assuming Legacy Bridge.`
-      });
-      setEventLog(prev => [...prev, `⚠️ Architecture detection error: ${error}`]);
-    }
-  };
-
   const initializeConsent = async () => {
     try {
+      const webViewConfig: WebViewConfig = {
+        position: WebViewPosition.HalfScreenTop,
+        backgroundStyle: { type: 'dimmed', color: 'blue', opacity: 0.8 },
+        cornerRadius: 25,
+        respectsSafeArea: true,
+        allowsOrientationChanges: true,
+      };
+
+      await CmSdkReactNativeV3.setWebViewConfig(webViewConfig);
+
       await CmSdkReactNativeV3.setUrlConfig({
         id: 'f5e3b73592c3c',
         domain: 'delivery.consentmanager.net',
@@ -172,18 +150,10 @@ const HomeScreen: React.FC = () => {
         noHash: true,
       });
 
-      await CmSdkReactNativeV3.setWebViewConfig({
-        position: 'fullScreen',
-        backgroundStyle: { type: 'dimmed', color: 'black', opacity: 0.5 },
-        cornerRadius: 5,
-        respectsSafeArea: true,
-        allowsOrientationChanges: true,
-      });
-
       // iOS-only: Set ATT status if on iOS
       if (Platform.OS === 'ios') {
         // ATT status values: 0=notDetermined, 1=restricted, 2=denied, 3=authorized
-        // In a real app, you would get this from AppTrackingTransparency framework
+        // You would get this from AppTrackingTransparency framework
         await CmSdkReactNativeV3.setATTStatus(0);
       }
 
@@ -218,7 +188,7 @@ const HomeScreen: React.FC = () => {
           ...prev,
           [methodName]: duration
         }));
-        setEventLog(prev => [...prev, `⚡ ${methodName}: ${duration}ms (${architectureInfo.type})`]);
+        setEventLog(prev => [...prev, `⚡ ${methodName}: ${duration}ms`]);
       }
 
       showToast(successMessage(result));
@@ -393,14 +363,13 @@ const HomeScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>CM React Native DemoApp v3.6.0</Text>
-        <Text style={styles.subtitle}>New Architecture Compatibility Test</Text>
+        <Text style={styles.subtitle}>Legacy architecture (classic React Native bridge)</Text>
 
-        {/* Architecture Info Section */}
-        <View style={[styles.infoContainer, architectureInfo.type === 'New Architecture' ? styles.newArchContainer : styles.legacyArchContainer]}>
-          <Text style={styles.infoTitle}>
-            {architectureInfo.type === 'New Architecture' ? '🚀' : '📱'} Architecture: {architectureInfo.type}
+        <View style={styles.infoContainer}>
+          <Text style={styles.infoTitle}>Architecture</Text>
+          <Text style={styles.infoDetails}>
+            This example runs with the legacy bridge only. TurboModules and Fabric are disabled to match old-architecture deployments.
           </Text>
-          <Text style={styles.infoDetails}>{architectureInfo.details}</Text>
         </View>
 
         {/* Performance Metrics Section */}
@@ -479,15 +448,9 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     padding: 15,
     borderRadius: 8,
-    borderWidth: 2,
-  },
-  newArchContainer: {
-    backgroundColor: '#e8f5e8',
-    borderColor: '#4caf50',
-  },
-  legacyArchContainer: {
-    backgroundColor: '#fff3e0',
-    borderColor: '#ff9800',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#f9f9f9',
   },
   infoTitle: {
     fontSize: 16,

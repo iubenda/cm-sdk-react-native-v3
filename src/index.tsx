@@ -1,4 +1,4 @@
-import { NativeModules, Platform, NativeEventEmitter } from 'react-native';
+import { NativeModules, Platform, NativeEventEmitter, processColor } from 'react-native';
 import NativeCmSdkReactNativeV3, {
   type ConsentReceivedEvent,
   type ErrorEvent,
@@ -6,9 +6,16 @@ import NativeCmSdkReactNativeV3, {
   type ATTStatusChangeEvent,
   type UrlConfig,
   type WebViewConfig,
+  type WebViewRect,
+  type WebViewBackgroundStyle,
+  WebViewPosition,
   type UserStatus,
   type GoogleConsentModeStatus,
+  type CmSdkReactNativeV3Module,
 } from './NativeCmSdkReactNativeV3';
+
+// Re-export enums/constants for consumers
+export { WebViewPosition };
 
 const LINKING_ERROR =
   `The package 'react-native-cm-sdk-react-native-v3' doesn't seem to be linked. Make sure: \n\n` +
@@ -16,19 +23,17 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
 
-// Use TurboModule if available (New Architecture), fallback to legacy NativeModules
-const CmSdkReactNativeV3 = NativeCmSdkReactNativeV3 ?? (NativeModules.CmSdkReactNativeV3
-  ? NativeModules.CmSdkReactNativeV3
-  : new Proxy(
-      {},
-      {
-        get() {
-          throw new Error(LINKING_ERROR);
-        },
-      }
-    ));
-
-export const isTurboModuleEnabled = NativeCmSdkReactNativeV3 != null;
+const CmSdkReactNativeV3: CmSdkReactNativeV3Module =
+  NativeCmSdkReactNativeV3 ??
+  (NativeModules.CmSdkReactNativeV3 as CmSdkReactNativeV3Module | undefined) ??
+  (new Proxy(
+    {},
+    {
+      get() {
+        throw new Error(LINKING_ERROR);
+      },
+    }
+  ) as CmSdkReactNativeV3Module);
 
 const eventEmitter = new NativeEventEmitter(CmSdkReactNativeV3);
 
@@ -70,7 +75,8 @@ export const setUrlConfig = (config: UrlConfig): Promise<void> => {
 };
 
 export const setWebViewConfig = (config: WebViewConfig): Promise<void> => {
-  return CmSdkReactNativeV3.setWebViewConfig(config);
+  const normalized = normalizeWebViewConfig(config);
+  return CmSdkReactNativeV3.setWebViewConfig(normalized);
 };
 
 export const setATTStatus = (status: number): Promise<void> => {
@@ -89,6 +95,64 @@ export const forceOpen = (jumpToSettings: boolean): Promise<boolean> => {
 // Consent status methods
 export const getUserStatus = (): Promise<UserStatus> => {
   return CmSdkReactNativeV3.getUserStatus();
+};
+
+// Helpers
+const normalizeWebViewConfig = (config: WebViewConfig): WebViewConfig => {
+  const position = (config.position as WebViewPosition | undefined) ?? WebViewPosition.FullScreen;
+  const allowedPositions = [
+    WebViewPosition.FullScreen,
+    WebViewPosition.HalfScreenTop,
+    WebViewPosition.HalfScreenBottom,
+    WebViewPosition.Custom,
+  ];
+  if (!allowedPositions.includes(position)) {
+    throw new Error(`Invalid WebView position: ${position}`);
+  }
+
+  if (position === WebViewPosition.Custom && !config.customRect) {
+    throw new Error('customRect is required when position is "custom"');
+  }
+
+  const backgroundStyle = (() => {
+    if (!config.backgroundStyle) {
+      return { type: 'dimmed', color: normalizeColor('black'), opacity: 0.5 } as WebViewBackgroundStyle;
+    }
+    const { type } = config.backgroundStyle;
+    switch (type) {
+    case 'dimmed':
+      return {
+        type,
+        color: normalizeColor(config.backgroundStyle.color ?? 'black'),
+        opacity: config.backgroundStyle.opacity ?? 0.5,
+      } as WebViewBackgroundStyle;
+    case 'color':
+        if (!config.backgroundStyle.color) throw new Error('color is required for backgroundStyle "color"');
+        return { type, color: normalizeColor(config.backgroundStyle.color) } as WebViewBackgroundStyle;
+    case 'blur':
+      return { type, blurEffectStyle: config.backgroundStyle.blurEffectStyle ?? 'dark' } as WebViewBackgroundStyle;
+    case 'none':
+      return { type } as WebViewBackgroundStyle;
+    default:
+      throw new Error(`Invalid backgroundStyle type: ${(config.backgroundStyle as any).type}`);
+    }
+  })();
+
+  return {
+    position,
+    customRect: config.customRect,
+    cornerRadius: config.cornerRadius ?? 5,
+    respectsSafeArea: config.respectsSafeArea ?? true,
+    allowsOrientationChanges: config.allowsOrientationChanges ?? true,
+    backgroundStyle,
+  };
+};
+
+const normalizeColor = (color: string | number | undefined) => {
+  if (color === undefined) return undefined;
+  const processed = processColor(color);
+  if (processed == null) throw new Error(`Invalid color value: ${color}`);
+  return processed;
 };
 
 export const getStatusForPurpose = (purposeId: string): Promise<string> => {
@@ -140,27 +204,6 @@ export const acceptAll = (): Promise<boolean> => {
   return CmSdkReactNativeV3.acceptAll();
 };
 
-// Helper function to check if New Architecture is enabled
-export const isNewArchitectureEnabled = (): boolean => {
-  // Check multiple indicators for New Architecture
-  // 1. Check if our module was loaded via TurboModuleRegistry
-  if (NativeCmSdkReactNativeV3 != null) {
-    return true;
-  }
-
-  // 2. Check for bridgeless mode (official RN flag)
-  if ((global as any).RN$Bridgeless === true) {
-    return true;
-  }
-
-  // 3. Check for TurboModule interop flag
-  if ((global as any).RN$TurboInterop === true) {
-    return true;
-  }
-
-  return false;
-};
-
 // Re-export types for consumer convenience
 export type {
   ConsentReceivedEvent,
@@ -168,6 +211,8 @@ export type {
   LinkClickEvent,
   ATTStatusChangeEvent,
   UrlConfig,
+  WebViewRect,
+  WebViewBackgroundStyle,
   WebViewConfig,
   UserStatus,
   GoogleConsentModeStatus,
