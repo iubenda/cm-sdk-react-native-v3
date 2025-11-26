@@ -36,6 +36,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   private val uiThreadHandler = Handler(Looper.getMainLooper())
   private var isInitialized = false
   private var storedATTStatus: Int = 0
+  private var isWebViewConfigSet = false
 
 
   init {
@@ -44,7 +45,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
     webViewConfig = ConsentLayerUIConfig(
       position = ConsentLayerUIConfig.Position.FULL_SCREEN,
       backgroundStyle = ConsentLayerUIConfig.BackgroundStyle.dimmed(android.graphics.Color.BLACK, 0.5f),
-      cornerRadius = 0f,
+      cornerRadius = dpToPx(5f),
       respectsSafeArea = true,
       isCancelable = false,
       allowsOrientationChanges = true
@@ -94,6 +95,12 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   @ReactMethod
   fun setWebViewConfig(config: ReadableMap, promise: Promise) {
     try {
+      if (::cmpManager.isInitialized && isInitialized) {
+        Log.w("CmSdkReactNativeV3", "setWebViewConfig called after CMPManager initialization. Config changes will not be applied. Set config before setUrlConfig.")
+        promise.resolve(null)
+        return
+      }
+
       val position = when (config.getString("position")) {
         "fullScreen" -> ConsentLayerUIConfig.Position.FULL_SCREEN
         "halfScreenBottom" -> ConsentLayerUIConfig.Position.HALF_SCREEN_BOTTOM
@@ -112,10 +119,7 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
         isCancelable = false,
         allowsOrientationChanges = if (config.hasKey("allowsOrientationChanges")) config.getBoolean("allowsOrientationChanges") else true
       )
-      // If already initialized, rebuild manager with the new config so position changes take effect
-      if (::cmpManager.isInitialized && isInitialized) {
-        runOnUiThread(Runnable { reinitializeCmpManagerWithCurrentConfig() })
-      }
+      isWebViewConfigSet = true
 
       promise.resolve(null)
     } catch (e: Exception) {
@@ -134,8 +138,10 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
         val noHash = if (config.hasKey("noHash")) config.getBoolean("noHash") else false
 
         this.urlConfig = UrlConfig(id, domain, language, appName, noHash = noHash)
-
-        initializeCMPManager()
+        // Ensure we initialize manager only once and with whatever webViewConfig is currently set
+        if (!::cmpManager.isInitialized) {
+          initializeCMPManager()
+        }
 
         promise.resolve(null)
       } catch (e: Exception) {
@@ -213,17 +219,6 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
     } catch (e: Exception) {
       promise.reject("ERROR", "Failed to get user status: ${e.message}", e)
     }
-  }
-
-  private fun reinitializeCmpManagerWithCurrentConfig() {
-    val activity = currentActivitySafe ?: return
-    try {
-      cmpManager.onActivityDestroyed()
-    } catch (_: Exception) {
-      // ignore and proceed with re-init
-    }
-    cmpManager = CMPManager.getInstance(activity, urlConfig, webViewConfig, this)
-    configureCmpManager(activity)
   }
 
   private fun dpToPx(dp: Float): Float {

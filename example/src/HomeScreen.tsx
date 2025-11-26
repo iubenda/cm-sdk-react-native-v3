@@ -133,7 +133,7 @@ const HomeScreen: React.FC = () => {
   const initializeConsent = async () => {
     try {
       const webViewConfig: WebViewConfig = {
-        position: WebViewPosition.HalfScreenTop,
+        position: WebViewPosition.HalfScreenBottom,
         backgroundStyle: { type: 'dimmed', color: 'blue', opacity: 0.8 },
         cornerRadius: 25,
         respectsSafeArea: true,
