@@ -206,12 +206,31 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  const logUserStatusFields = (value: any, path: string[] = []) => {
+    if (value !== null && typeof value === 'object') {
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => logUserStatusFields(item, [...path, `${index}`]));
+      } else {
+        Object.entries(value).forEach(([key, val]) => logUserStatusFields(val, [...path, key]));
+      }
+      return;
+    }
+
+    const fieldPath = path.join('.');
+    const prefix = fieldPath ? `User status ${fieldPath}` : 'User status';
+    console.log(`${prefix}:`, value);
+    setEventLog(prev => [...prev, `${prefix}: ${JSON.stringify(value)}`]);
+  };
+
   const buttons = [
     {
       title: 'Get User Status',
       onPress: () => handleApiCall(
         CmSdkReactNativeV3.getUserStatus,
-        (result) => `User Status: ${JSON.stringify(result).substring(0, 100)}...`,
+        (result) => {
+          logUserStatusFields(result);
+          return `User Status: ${JSON.stringify(result).substring(0, 100)}...`;
+        },
         'Failed to get user status',
         'getUserStatus'
       ),
