@@ -87,5 +87,5 @@ dependencies {
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
   implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.1"
   implementation "androidx.lifecycle:lifecycle-common-java8:2.6.1"
-  implementation "net.consentmanager.sdkv3:cmsdkv3:3.7.0"
+  implementation "net.consentmanager.sdkv3:cmsdkv3:3.7.1"
 }
