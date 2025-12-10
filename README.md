@@ -1,4 +1,4 @@
-# ``consentmanager CMP SDK v3.6.5``
+# ``consentmanager CMP SDK v3.6.6``
 
 # cm-sdk-react-native-v3
 

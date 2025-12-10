@@ -156,7 +156,7 @@ const HomeScreen: React.FC = () => {
       // iOS-only: Set ATT status if on iOS
       if (Platform.OS === 'ios') {
         // ATT status comes from AppTrackingTransparency (0–3). Use enum for clarity.
-        await CmSdkReactNativeV3.setATTStatus(ATTStatus.NotDetermined);
+        await CmSdkReactNativeV3.setATTStatus(3);
       }
 
       await CmSdkReactNativeV3.checkAndOpen(false);
@@ -254,9 +254,9 @@ const HomeScreen: React.FC = () => {
       ),
     },
     {
-      title: 'Get Status for Vendor s2789',
+      title: 'Get Status for Vendor s1',
       onPress: () => handleApiCall(
-        () => CmSdkReactNativeV3.getStatusForVendor('s2789'),
+        () => CmSdkReactNativeV3.getStatusForVendor('s1'),
         (result) => `Vendor Status: ${result}`,
         'Failed to get vendor status',
         'getStatusForVendor'

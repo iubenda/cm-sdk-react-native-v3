@@ -13,7 +13,7 @@ RCT_EXTERN_METHOD(setWebViewConfig:(NSDictionary *)config
         resolve:(RCTPromiseResolveBlock)resolve
         reject:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(setATTStatus:(NSNumber)status
+RCT_EXTERN_METHOD(setATTStatus:(double)status
         resolve:(RCTPromiseResolveBlock)resolve
         reject:(RCTPromiseRejectBlock)reject)
 
