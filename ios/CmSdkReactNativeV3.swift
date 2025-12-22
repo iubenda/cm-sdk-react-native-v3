@@ -275,6 +275,17 @@ class CmSdkReactNativeV3: RCTEventEmitter, CMPManagerDelegate {
         resolve(response)
   }
 
+  @objc(isConsentRequired:reject:)
+  func isConsentRequired(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    cmpManager.isConsentRequired { isRequired, error in
+      if let error = error {
+        reject("ERROR", "Failed to check if consent is required: \(error.localizedDescription)", error)
+      } else {
+        resolve(isRequired)
+      }
+    }
+  }
+
   @objc(getStatusForPurpose:resolve:reject:)
   func getStatusForPurpose(_ purposeId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       let status = cmpManager.getStatusForPurpose(id: purposeId)

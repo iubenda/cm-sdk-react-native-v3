@@ -89,5 +89,5 @@ dependencies {
   implementation "androidx.lifecycle:lifecycle-common-java8:2.6.1"
 
   // consentmanager's underlying native Android SDK dependency
-  implementation "net.consentmanager.sdkv3:cmsdkv3:3.7.1"
+  implementation "net.consentmanager.sdkv3:cmsdkv3:3.8.0"
 }

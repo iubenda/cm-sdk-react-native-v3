@@ -29,6 +29,9 @@ RCT_EXTERN_METHOD(forceOpen:(BOOL)jumpToSettings
 RCT_EXTERN_METHOD(getUserStatus:(RCTPromiseResolveBlock)resolve
         reject:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(isConsentRequired:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(getStatusForPurpose:(NSString *)purposeId
         resolve:(RCTPromiseResolveBlock)resolve
         reject:(RCTPromiseRejectBlock)reject)

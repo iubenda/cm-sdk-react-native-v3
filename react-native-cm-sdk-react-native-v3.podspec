@@ -14,6 +14,6 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/iubenda/cm-sdk-react-native-v3.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,swift}"
-  s.dependency "cm-sdk-ios-v3", "3.6.0"
+  s.dependency "cm-sdk-ios-v3", "3.8.0"
   s.dependency "React-Core"
 end

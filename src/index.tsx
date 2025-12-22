@@ -111,6 +111,10 @@ export const getUserStatus = (): Promise<UserStatus> => {
   return CmSdkReactNativeV3.getUserStatus();
 };
 
+export const isConsentRequired = (): Promise<boolean> => {
+  return CmSdkReactNativeV3.isConsentRequired();
+};
+
 // Helpers
 const normalizeWebViewConfig = (config: WebViewConfig): WebViewConfig => {
   const position = (config.position as WebViewPosition | undefined) ?? WebViewPosition.FullScreen;

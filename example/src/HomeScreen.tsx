@@ -159,8 +159,8 @@ const HomeScreen: React.FC = () => {
         await CmSdkReactNativeV3.setATTStatus(3);
       }
 
-      await CmSdkReactNativeV3.checkAndOpen(false);
-      console.log('CMPManager initialized and open consent layer opened if necessary');
+//       await CmSdkReactNativeV3.checkAndOpen(false);
+//       console.log('CMPManager initialized and open consent layer opened if necessary');
     } catch (error) {
       console.error('Error initializing consent:', error);
     } finally {
@@ -233,6 +233,15 @@ const HomeScreen: React.FC = () => {
         },
         'Failed to get user status',
         'getUserStatus'
+      ),
+    },
+    {
+      title: 'Is Consent Required',
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.isConsentRequired,
+        (result) => `Consent is required? ${result}`,
+        'Failed to check if consent is required',
+        'isConsentRequired'
       ),
     },
     {
@@ -383,7 +392,7 @@ const HomeScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>CM React Native DemoApp v3.6.0</Text>
+        <Text style={styles.title}>CM React Native DemoApp v3.8.0</Text>
         <Text style={styles.subtitle}>Legacy architecture (classic React Native bridge)</Text>
 
         <View style={styles.infoContainer}>

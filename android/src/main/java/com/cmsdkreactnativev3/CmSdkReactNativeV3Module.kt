@@ -272,6 +272,26 @@ class CmSdkReactNativeV3Module(reactContext: ReactApplicationContext) :
   }
 
   /**
+   * Checks if consent is required without opening the consent UI
+   */
+  @ReactMethod
+  fun isConsentRequired(promise: Promise) {
+    scope.launch {
+      try {
+        cmpManager.isConsentRequired { result ->
+          if (result.isSuccess) {
+            promise.resolve(result.getOrNull() ?: false)
+          } else {
+            promise.reject("ERROR", result.exceptionOrNull()?.message ?: "Unknown error")
+          }
+        }
+      } catch (e: Exception) {
+        promise.reject("ERROR", "Failed to check if consent is required: ${e.message}", e)
+      }
+    }
+  }
+
+  /**
    * Replacement for openConsentLayer - force opens the consent UI
    */
   @ReactMethod

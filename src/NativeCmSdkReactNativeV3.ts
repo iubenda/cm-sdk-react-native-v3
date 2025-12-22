@@ -104,6 +104,7 @@ export interface CmSdkReactNativeV3Module {
 
   // Consent status methods
   getUserStatus(): Promise<UserStatus>;
+  isConsentRequired(): Promise<boolean>;
   
   getStatusForPurpose(purposeId: string): Promise<string>;
   getStatusForVendor(vendorId: string): Promise<string>;
