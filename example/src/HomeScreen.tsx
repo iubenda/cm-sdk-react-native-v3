@@ -20,7 +20,6 @@ import CmSdkReactNativeV3, {
   addClickLinkListener,
   BackgroundStyle,
   BlurEffectStyle,
-  ATTStatus,
   WebViewPosition,
   type WebViewConfig,
 } from 'cm-sdk-react-native-v3';
@@ -151,6 +150,7 @@ const HomeScreen: React.FC = () => {
         language: 'EN',
         appName: 'CMDemoAppReactNative',
         noHash: true,
+        webViewConnectionTimeoutMillis: 13000,
       });
 
       // iOS-only: Set ATT status if on iOS
@@ -254,9 +254,9 @@ const HomeScreen: React.FC = () => {
       ),
     },
     {
-      title: 'Get Status for Purpose c53',
+      title: 'Get Status for Purpose c54',
       onPress: () => handleApiCall(
-        () => CmSdkReactNativeV3.getStatusForPurpose('c53'),
+        () => CmSdkReactNativeV3.getStatusForPurpose('c54'),
         (result) => `Purpose Status: ${result}`,
         'Failed to get purpose status',
         'getStatusForPurpose'
@@ -281,36 +281,36 @@ const HomeScreen: React.FC = () => {
       ),
     },
     {
-      title: 'Enable Purposes c52 and c53',
+      title: 'Enable Purposes c52 and c54',
       onPress: () => handleApiCall(
-        () => CmSdkReactNativeV3.acceptPurposes(['c52', 'c53'], true),
+        () => CmSdkReactNativeV3.acceptPurposes(['c52', 'c54'], true),
         () => 'Purposes enabled',
         'Failed to enable purposes',
         'acceptPurposes'
       ),
     },
     {
-      title: 'Disable Purposes c52 and c53',
+      title: 'Disable Purposes c52 and c54',
       onPress: () => handleApiCall(
-        () => CmSdkReactNativeV3.rejectPurposes(['c52', 'c53'], true),
+        () => CmSdkReactNativeV3.rejectPurposes(['c52', 'c54'], true),
         () => 'Purposes disabled',
         'Failed to disable purposes',
         'rejectPurposes'
       ),
     },
     {
-      title: 'Enable Vendors s2790 and s2791',
+      title: 'Enable Vendors s1052 and s2612',
       onPress: () => handleApiCall(
-        () => CmSdkReactNativeV3.acceptVendors(['s2790', 's2791']),
+        () => CmSdkReactNativeV3.acceptVendors(['s1052', 's2612']),
         () => 'Vendors Enabled',
         'Failed to enable vendors',
         'acceptVendors'
       ),
     },
     {
-      title: 'Disable Vendors s2790 and s2791',
+      title: 'Disable Vendors s1052 and s2612',
       onPress: () => handleApiCall(
-        () => CmSdkReactNativeV3.rejectVendors(['s2790', 's2791']),
+        () => CmSdkReactNativeV3.rejectVendors(['s1052', 's2612']),
         () => 'Vendors Disabled',
         'Failed to disable vendors',
         'rejectVendors'
@@ -392,7 +392,7 @@ const HomeScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>CM React Native DemoApp v3.8.0</Text>
+        <Text style={styles.title}>CM React Native DemoApp v3.10.0</Text>
         <Text style={styles.subtitle}>Legacy architecture (classic React Native bridge)</Text>
 
         <View style={styles.infoContainer}>

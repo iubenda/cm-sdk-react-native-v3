@@ -2,9 +2,6 @@
 #
 .DS_Store
 
-# XDE
-.expo/
-
 # VSCode
 .vscode/
 jsconfig.json
@@ -85,3 +82,6 @@ android/generated
 /package-lock.json
 /example/ios/Podfile.lock
 /yarn.lock
+/example/.watchman-cookie-Fabios-MacBook-Pro.local-77216-1759
+/init.log
+/reset.log
