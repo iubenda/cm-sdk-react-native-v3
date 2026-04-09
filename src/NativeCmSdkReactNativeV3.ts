@@ -26,7 +26,13 @@ export type UrlConfig = {
   domain: string;
   language: string;
   appName: string;
+  /** Optional config override supported by the native SDKs. Reserved for specific CMP setups. */
+  jsonConfig?: string;
   noHash?: boolean;
+  /** WebView connection timeout in ms. Default 3000. 0 = disabled. Clamped 100–60000. */
+  webViewConnectionTimeoutMillis?: number;
+  /** Optional regulation override like `GDPR` or `LGPD`. */
+  forceRegulation?: string;
 };
 
 export enum WebViewPosition {
@@ -66,7 +72,12 @@ export enum ATTStatus {
 export type WebViewBackgroundStyle =
   | { type: BackgroundStyleType.Dimmed; color?: string | number; opacity?: number }
   | { type: BackgroundStyleType.Color; color: string | number }
-  | { type: BackgroundStyleType.Blur; blurEffectStyle?: BlurEffectStyle }
+  | {
+      type: BackgroundStyleType.Blur;
+      blurEffectStyle?: BlurEffectStyle;
+      fallbackColor?: string | number;
+      fallbackOpacity?: number;
+    }
   | { type: BackgroundStyleType.None };
 
 export type WebViewConfig = {
@@ -75,19 +86,25 @@ export type WebViewConfig = {
   cornerRadius?: number;
   respectsSafeArea?: boolean;
   allowsOrientationChanges?: boolean;
+  darkMode?: boolean;
+  /** Android-only. */
+  navigationBarColor?: string | number;
   backgroundStyle?: WebViewBackgroundStyle;
 };
 
 export type UserStatus = {
   status: string;
-  vendors: Object;
-  purposes: Object;
+  /** @deprecated Use `status`. Kept for Android backward compatibility. */
+  hasUserChoice?: string;
+  vendors: Record<string, string>;
+  purposes: Record<string, string>;
   tcf: string;
   addtlConsent: string;
   regulation: string;
 };
 
-export type GoogleConsentModeStatus = Object;
+export type GoogleConsentModeStatus = Record<string, string>;
+export type ThirdPartyConsentStatus = Record<string, boolean>;
 
 export interface CmSdkReactNativeV3Module {
   // Configuration methods
@@ -120,6 +137,17 @@ export interface CmSdkReactNativeV3Module {
   rejectPurposes(purposes: string[], updateVendor: boolean): Promise<boolean>;
   rejectAll(): Promise<boolean>;
   acceptAll(): Promise<boolean>;
+
+  // Android-only native helpers
+  setAutomaticConsentUpdatesEnabled?(enabled: boolean): Promise<void>;
+  updateThirdPartyConsent?(): Promise<ThirdPartyConsentStatus>;
+
+  // iOS-only Firebase helpers
+  configureAutomaticFirebaseConsentUpdates?(enabled: boolean): Promise<void>;
+  setAutomaticFirebaseConsentUpdatesEnabled?(enabled: boolean): Promise<void>;
+  isAutomaticFirebaseConsentUpdatesEnabled?(): Promise<boolean>;
+  updateFirebaseConsent?(): Promise<boolean>;
+  isFirebaseAnalyticsAvailable?(): Promise<boolean>;
 
   // Event emitter methods used by NativeEventEmitter
   addListener(eventName: string): void;

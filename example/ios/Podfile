@@ -2,6 +2,29 @@ ENV['RCT_NEW_ARCH_ENABLED'] = '1'
 ENV['RCT_BRIDGELESS_ENABLED'] = '1'  # RN 0.74+
 ENV['USE_HERMES'] = '1'
 
+def patch_fmt_for_xcode_26!(installer)
+  fmt_base = File.join(installer.sandbox.root.to_s, 'fmt', 'include', 'fmt', 'base.h')
+  if File.exist?(fmt_base)
+    contents = File.read(fmt_base)
+    patched = contents.sub(
+      "#elif defined(__cpp_consteval)\n#  define FMT_USE_CONSTEVAL 1",
+      "#elif defined(__cpp_consteval)\n#  define FMT_USE_CONSTEVAL 0"
+    )
+    if patched != contents
+      File.chmod(0644, fmt_base)
+      File.write(fmt_base, patched)
+    end
+  end
+
+  installer.pods_project.targets.each do |target|
+    next unless target.name == 'fmt'
+
+    target.build_configurations.each do |config|
+      config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+    end
+  end
+end
+
 ws_dir = Pathname.new(__dir__)
 ws_dir = ws_dir.parent until
   File.exist?("#{ws_dir}/node_modules/react-native-test-app/test_app.rb") ||
@@ -10,4 +33,9 @@ require "#{ws_dir}/node_modules/react-native-test-app/test_app.rb"
 
 workspace 'CmSdkReactNativeV3Example.xcworkspace'
 
-use_test_app!
+use_test_app!(
+  post_install: lambda do |installer|
+    # Work around fmt 11.0.2 failing under Xcode 26.4's stricter consteval checks.
+    patch_fmt_for_xcode_26!(installer)
+  end
+)

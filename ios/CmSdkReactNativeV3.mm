@@ -78,6 +78,23 @@ RCT_EXTERN_METHOD(importCMPInfo:(NSString *)cmpString
 RCT_EXTERN_METHOD(resetConsentManagementData:(RCTPromiseResolveBlock)resolve
         reject:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(configureAutomaticFirebaseConsentUpdates:(BOOL)enabled
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(setAutomaticFirebaseConsentUpdatesEnabled:(BOOL)enabled
+        resolve:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(isAutomaticFirebaseConsentUpdatesEnabled:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(updateFirebaseConsent:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(isFirebaseAnalyticsAvailable:(RCTPromiseResolveBlock)resolve
+        reject:(RCTPromiseRejectBlock)reject)
+
 // Event emitter support methods
 RCT_EXTERN_METHOD(addListener:(NSString *)eventName)
 RCT_EXTERN_METHOD(removeListeners:(double)count)

@@ -14,6 +14,7 @@ import NativeCmSdkReactNativeV3, {
   ATTStatus,
   type UserStatus,
   type GoogleConsentModeStatus,
+  type ThirdPartyConsentStatus,
   type CmSdkReactNativeV3Module,
 } from './NativeCmSdkReactNativeV3';
 
@@ -21,7 +22,7 @@ import NativeCmSdkReactNativeV3, {
 export { WebViewPosition, BackgroundStyleType, BlurEffectStyle, ATTStatus };
 
 const LINKING_ERROR =
-  `The package 'react-native-cm-sdk-react-native-v3' doesn't seem to be linked. Make sure: \n\n` +
+  `The package 'cm-sdk-react-native-v3' doesn't seem to be linked. Make sure: \n\n` +
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
@@ -39,6 +40,17 @@ const CmSdkReactNativeV3: CmSdkReactNativeV3Module =
   ) as CmSdkReactNativeV3Module);
 
 const eventEmitter = new NativeEventEmitter(CmSdkReactNativeV3);
+
+const getOptionalNativeMethod = <T extends keyof CmSdkReactNativeV3Module>(methodName: T) => {
+  const method = CmSdkReactNativeV3[methodName];
+  if (typeof method !== 'function') {
+    throw new Error(
+      `[cm-sdk-react-native-v3] ${String(methodName)} is not available on ${Platform.OS}.`
+    );
+  }
+
+  return method.bind(CmSdkReactNativeV3) as Exclude<CmSdkReactNativeV3Module[T], undefined>;
+};
 
 export const addConsentListener = (
   callback: (consent: string, jsonObject: Object) => void
@@ -134,7 +146,7 @@ const normalizeWebViewConfig = (config: WebViewConfig): WebViewConfig => {
     }
     if (Platform.OS === 'android') {
       console.warn(
-        '[cm-sdk-react-native-v3] Android native SDK currently ignores customRect/position "custom"; it will fall back to full screen.'
+        '[cm-sdk-react-native-v3] Android native SDK uses width/height/gravity for custom positioning, so RN customRect falls back to full screen.'
       );
     }
   }
@@ -170,10 +182,12 @@ const normalizeWebViewConfig = (config: WebViewConfig): WebViewConfig => {
         ) {
           throw new Error(`Invalid blurEffectStyle: ${blurStyle}`);
         }
-        if (Platform.OS === 'android') {
-          console.warn('[cm-sdk-react-native-v3] Android native SDK currently ignores blur backgrounds; using dimmed.');
-        }
-        return { type, blurEffectStyle: blurStyle } as WebViewBackgroundStyle;
+        return {
+          type,
+          blurEffectStyle: blurStyle,
+          fallbackColor: normalizeColor(config.backgroundStyle.fallbackColor ?? 'black'),
+          fallbackOpacity: config.backgroundStyle.fallbackOpacity ?? 0.5,
+        } as WebViewBackgroundStyle;
       }
       case BackgroundStyleType.None:
         return { type } as WebViewBackgroundStyle;
@@ -182,27 +196,23 @@ const normalizeWebViewConfig = (config: WebViewConfig): WebViewConfig => {
     }
   })();
 
-  if (Platform.OS === 'android' && config.backgroundStyle) {
-    console.warn(
-      '[cm-sdk-react-native-v3] Android native SDK currently ignores backgroundStyle overrides; it always uses a dimmed background.'
-    );
-  }
-
   return {
     position,
     customRect: config.customRect,
     cornerRadius: config.cornerRadius ?? 5,
     respectsSafeArea: config.respectsSafeArea ?? true,
     allowsOrientationChanges: config.allowsOrientationChanges ?? true,
+    darkMode: config.darkMode ?? false,
+    navigationBarColor: normalizeColor(config.navigationBarColor),
     backgroundStyle,
   };
 };
 
-const normalizeColor = (color: string | number | undefined) => {
+const normalizeColor = (color: string | number | undefined): number | undefined => {
   if (color === undefined) return undefined;
   const processed = processColor(color);
   if (processed == null) throw new Error(`Invalid color value: ${color}`);
-  return processed;
+  return processed as number;
 };
 
 export const getStatusForPurpose = (purposeId: string): Promise<string> => {
@@ -254,6 +264,34 @@ export const acceptAll = (): Promise<boolean> => {
   return CmSdkReactNativeV3.acceptAll();
 };
 
+export const setAutomaticConsentUpdatesEnabled = (enabled: boolean): Promise<void> => {
+  return getOptionalNativeMethod('setAutomaticConsentUpdatesEnabled')(enabled);
+};
+
+export const updateThirdPartyConsent = (): Promise<ThirdPartyConsentStatus> => {
+  return getOptionalNativeMethod('updateThirdPartyConsent')();
+};
+
+export const configureAutomaticFirebaseConsentUpdates = (enabled: boolean): Promise<void> => {
+  return getOptionalNativeMethod('configureAutomaticFirebaseConsentUpdates')(enabled);
+};
+
+export const setAutomaticFirebaseConsentUpdatesEnabled = (enabled: boolean): Promise<void> => {
+  return getOptionalNativeMethod('setAutomaticFirebaseConsentUpdatesEnabled')(enabled);
+};
+
+export const isAutomaticFirebaseConsentUpdatesEnabled = (): Promise<boolean> => {
+  return getOptionalNativeMethod('isAutomaticFirebaseConsentUpdatesEnabled')();
+};
+
+export const updateFirebaseConsent = (): Promise<boolean> => {
+  return getOptionalNativeMethod('updateFirebaseConsent')();
+};
+
+export const isFirebaseAnalyticsAvailable = (): Promise<boolean> => {
+  return getOptionalNativeMethod('isFirebaseAnalyticsAvailable')();
+};
+
 // Re-export types for consumer convenience
 export type {
   ConsentReceivedEvent,
@@ -266,6 +304,7 @@ export type {
   WebViewConfig,
   UserStatus,
   GoogleConsentModeStatus,
+  ThirdPartyConsentStatus,
 };
 
 /**
